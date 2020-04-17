@@ -54,6 +54,7 @@ android {
 
 dependencies {
 	// Jellyfin
+	implementation(project(":playback"))
 	implementation("org.jellyfin.apiclient:android:0.7.7")
 
 	// Kotlin

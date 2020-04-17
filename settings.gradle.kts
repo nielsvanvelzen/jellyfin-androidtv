@@ -1,6 +1,7 @@
 import java.util.*
 
 include(":app")
+include(":playback")
 
 // Load properties from local.properties
 val properties = Properties().apply {
