@@ -44,8 +44,6 @@ dependencies {
 
 	// Android(x)
 	implementation("androidx.core:core-ktx:1.2.0")
-	implementation("androidx.fragment:fragment-ktx:1.2.4")
-	implementation("androidx.appcompat:appcompat:1.1.0")
 
 	// Testing
 	testImplementation("junit:junit:4.12")
