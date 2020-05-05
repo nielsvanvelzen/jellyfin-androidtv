@@ -127,6 +127,9 @@
         <activity android:name=".ui.playback.nextup.NextUpActivity"
             android:noHistory="true"
             android:screenOrientation="landscape" />
+
+        <!-- Test -->
+        <activity android:name=".PlaybackTestActivity" />
     </application>
 
 </manifest>
