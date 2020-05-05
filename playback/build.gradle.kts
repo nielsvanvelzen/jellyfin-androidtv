@@ -45,6 +45,10 @@ dependencies {
 	// Android(x)
 	implementation("androidx.core:core-ktx:1.2.0")
 
+	// Video players
+	// TODO: Move to separate module
+	implementation("com.amazon.android:exoplayer:2.11.3")
+
 	// Testing
 	testImplementation("junit:junit:4.12")
 	testImplementation("androidx.test.ext:junit:1.1.1")

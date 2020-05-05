@@ -9,7 +9,7 @@ import org.jellyfin.playback.queue.UserQueueItem
 
 class PlaybackTestActivity : Activity() {
 	private val jellyfinPlayback by lazy {
-		JellyfinPlayback().apply {
+		JellyfinPlayback(this).apply {
 			val url = "http://jell.yfish.us/media/jellyfish-3-mbps-hd-h264.mkv"
 			val queue = SingleQueue(UserQueueItem(url))
 			playQueue(queue)
