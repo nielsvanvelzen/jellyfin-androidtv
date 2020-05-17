@@ -49,6 +49,10 @@ dependencies {
 	// TODO: Move to separate module
 	implementation("com.amazon.android:exoplayer:2.11.3")
 
+	// Remotes
+	// TODO: Move to separate module
+	implementation("androidx.media2:media2-session:1.0.3")
+
 	// Testing
 	testImplementation("junit:junit:4.12")
 	testImplementation("androidx.test.ext:junit:1.1.1")
