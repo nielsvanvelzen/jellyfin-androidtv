@@ -5,13 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.tvprovider.media.tv.Channel
-import androidx.tvprovider.media.tv.ChannelLogoUtils
-import androidx.tvprovider.media.tv.PreviewProgram
-import androidx.tvprovider.media.tv.TvContractCompat
+import androidx.tvprovider.media.tv.*
 import androidx.tvprovider.media.tv.TvContractCompat.WatchNextPrograms
-import androidx.tvprovider.media.tv.WatchNextProgram
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -20,17 +17,16 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.TvApp
 import org.jellyfin.androidtv.ui.startup.StartupActivity
 import org.jellyfin.androidtv.util.ImageUtils
-import org.jellyfin.androidtv.util.apiclient.getNextUpEpisodes
-import org.jellyfin.androidtv.util.apiclient.getUserViews
 import org.jellyfin.androidtv.util.dp
-import org.jellyfin.apiclient.interaction.ApiClient
-import org.jellyfin.apiclient.model.drawing.ImageFormat
-import org.jellyfin.apiclient.model.dto.BaseItemDto
-import org.jellyfin.apiclient.model.dto.ImageOptions
-import org.jellyfin.apiclient.model.querying.ItemFields
-import org.jellyfin.apiclient.model.querying.NextUpQuery
+import org.jellyfin.apiclient.api.client.KtorClient
+import org.jellyfin.apiclient.api.operations.ImageApi
+import org.jellyfin.apiclient.api.operations.TvShowsApi
+import org.jellyfin.apiclient.api.operations.UserViewsApi
+import org.jellyfin.apiclient.model.api.BaseItemDto
+import org.jellyfin.apiclient.model.api.ImageType
 import org.koin.core.KoinComponent
 import org.koin.core.inject
+import java.time.ZoneOffset
 
 /**
  * Manages channels on the android tv home screen
@@ -42,11 +38,11 @@ class ChannelManager : KoinComponent {
 		/**
 		 * Amount of ticks found in a millisecond, used for calculation
 		 */
-		private const val TICKS_IN_MILLISECOND = 10000
+		private const val TICKS_IN_MILLISECOND = 10000L
 	}
 
 	private val application = TvApp.getApplication()
-	private val apiClient: ApiClient by inject()
+	private val api: KtorClient by inject()
 
 	/**
 	 * Check if the app can use Leanback features and is API level 26 or higher
@@ -93,7 +89,7 @@ class ChannelManager : KoinComponent {
 		}
 
 		// Update logo
-		ChannelLogoUtils.storeChannelLogo(application, ContentUris.parseId(uri), application.resources.getDrawable(R.drawable.ic_jellyfin, null).toBitmap(80.dp, 80.dp))
+		ChannelLogoUtils.storeChannelLogo(application, ContentUris.parseId(uri), ResourcesCompat.getDrawable(application.resources, R.drawable.ic_jellyfin, null)!!.toBitmap(80.dp, 80.dp))
 
 		return uri
 	}
@@ -109,14 +105,16 @@ class ChannelManager : KoinComponent {
 			.setAppLinkIntent(Intent(application, StartupActivity::class.java))
 			.build())
 
-		val response = apiClient.getUserViews() ?: return
+		val userViewsApi = UserViewsApi(api)
+		val response by userViewsApi.getUserViews(application.currentUser.id, includeHidden = false)
 
 		// Delete current items
 		application.contentResolver.delete(TvContractCompat.PreviewPrograms.CONTENT_URI, null, null)
 
 		// Add new items
-		application.contentResolver.bulkInsert(TvContractCompat.PreviewPrograms.CONTENT_URI, response.items.map { item ->
-			val imageUri = if (item.hasPrimaryImage) Uri.parse(apiClient.GetImageUrl(item, ImageOptions()))
+		application.contentResolver.bulkInsert(TvContractCompat.PreviewPrograms.CONTENT_URI, response.items.orEmpty().map { item ->
+			val imageApi = ImageApi(api)
+			val imageUri = if (ImageType.PRIMARY in item.imageTags) Uri.parse(imageApi.getItemImageUrl(item.id, ImageType.PRIMARY))
 			else Uri.parse(ImageUtils.getResourceUrl(R.drawable.tile_land_tv))
 
 			PreviewProgram.Builder()
@@ -145,15 +143,11 @@ class ChannelManager : KoinComponent {
 		val user = application.currentUser ?: return@withContext
 
 		// Get new items
-		val response = apiClient.getNextUpEpisodes(NextUpQuery().apply {
-			userId = user.id
-			imageTypeLimit = 1
-			limit = 10
-			fields = arrayOf(ItemFields.DateCreated)
-		})
+		val tvShowsApi = TvShowsApi(api)
+		val response by tvShowsApi.getNextUp(user.id, imageTypeLimit = 1, limit = 10, fields = "DateCreated")
 
 		// Add new items
-		response?.items?.let { items ->
+		response.items?.let { items ->
 			application.contentResolver.bulkInsert(
 				WatchNextPrograms.CONTENT_URI,
 				items.map { item -> getBaseItemAsWatchNextProgram(item).toContentValues() }.toTypedArray()
@@ -167,30 +161,27 @@ class ChannelManager : KoinComponent {
 	 * Assumes the item type is "episode"
 	 */
 	private fun getBaseItemAsWatchNextProgram(item: BaseItemDto) = WatchNextProgram.Builder().apply {
-		setInternalProviderId(item.id)
+		setInternalProviderId(item.id.toString())
 		setType(WatchNextPrograms.TYPE_TV_EPISODE)
 		setTitle("${item.seriesName} - ${item.name}")
 
 		// Poster image
 		setPosterArtAspectRatio(WatchNextPrograms.ASPECT_RATIO_16_9)
-		setPosterArtUri(Uri.parse(apiClient.GetImageUrl(item, ImageOptions().apply {
-			format = ImageFormat.Png
-			height = 288
-			width = 512
-		})))
+		val imageApi = ImageApi(api)
+		setPosterArtUri(Uri.parse(imageApi.getItemImageUrl(item.id, ImageType.PRIMARY, format = "png", width = 512, height = 288)))
 
 		// Use date created or fallback to current time if unavailable
-		setLastEngagementTimeUtcMillis(item.dateCreated?.time ?: System.currentTimeMillis())
+		setLastEngagementTimeUtcMillis(item.dateCreated?.toInstant(ZoneOffset.UTC)?.toEpochMilli() ?: System.currentTimeMillis())
 
 		when {
 			// User has started playing the episode
-			item.canResume -> {
+			item.userData?.playbackPositionTicks ?: 0 > 0 -> {
 				setWatchNextType(WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE)
-				setLastPlaybackPositionMillis((item.resumePositionTicks / TICKS_IN_MILLISECOND).toInt())
+				setLastPlaybackPositionMillis((item.userData?.playbackPositionTicks / TICKS_IN_MILLISECOND).toInt())
 			}
 			// Episode runtime has been determined
 			item.runTimeTicks != null -> {
-				setDurationMillis((item.runTimeTicks / TICKS_IN_MILLISECOND).toInt())
+				setDurationMillis((item.runTimeTicks!! / TICKS_IN_MILLISECOND).toInt())
 			}
 			// First episode of the season
 			item.indexNumber == 0 -> {
