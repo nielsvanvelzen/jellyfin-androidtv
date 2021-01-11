@@ -1201,6 +1201,10 @@ public class PlaybackController {
         return mVideoManager.translateVlcAudioId(vlcId);
     }
 
+    public void destroy() {
+        this.mFragment = null;
+    }
+
     /**
      * List of various states that we can be in
      */
