@@ -17,7 +17,7 @@ import org.jellyfin.androidtv.constant.HomeSectionType
 import org.jellyfin.androidtv.integration.LeanbackChannelWorker
 import org.jellyfin.androidtv.ui.browsing.BrowseRowDef
 import org.jellyfin.androidtv.ui.browsing.IRowLoader
-import org.jellyfin.androidtv.ui.browsing.StdBrowseFragment
+import org.jellyfin.androidtv.ui.browsing.StdRowsFragment
 import org.jellyfin.androidtv.ui.playback.AudioEventListener
 import org.jellyfin.androidtv.ui.playback.MediaManager
 import org.jellyfin.androidtv.ui.presentation.CardPresenter
@@ -33,7 +33,7 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 import java.util.*
 
-class HomeFragment : StdBrowseFragment(), AudioEventListener {
+class HomeFragment : StdRowsFragment(), AudioEventListener {
 	private val apiClient by inject<ApiClient>()
 	private val helper by lazy { HomeFragmentHelper(requireContext()) }
 
