@@ -8,6 +8,8 @@ import androidx.leanback.preference.LeanbackSettingsFragmentCompat
 import androidx.preference.*
 import org.jellyfin.androidtv.ui.preference.custom.ButtonRemapDialogFragment
 import org.jellyfin.androidtv.ui.preference.custom.ButtonRemapPreference
+import org.jellyfin.androidtv.ui.preference.custom.RichListPreferenceDialogFragment
+import org.jellyfin.androidtv.ui.preference.custom.UserSelectionPreference
 
 class PreferencesFragment : LeanbackSettingsFragmentCompat() {
 	override fun onPreferenceStartInitialScreen() {
@@ -36,6 +38,7 @@ class PreferencesFragment : LeanbackSettingsFragmentCompat() {
 		val fragment = when (pref) {
 			// Custom
 			is ButtonRemapPreference -> ButtonRemapDialogFragment.newInstance(pref.key)
+			is UserSelectionPreference -> RichListPreferenceDialogFragment.newInstance(pref.key)
 
 			// Leanback
 			is ListPreference -> LeanbackListPreferenceDialogFragmentCompat.newInstanceSingle(pref.key)

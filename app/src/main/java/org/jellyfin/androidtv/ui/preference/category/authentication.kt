@@ -1,49 +1,21 @@
 package org.jellyfin.androidtv.ui.preference.category
 
-import org.jellyfin.androidtv.R
-import org.jellyfin.androidtv.preference.UserPreferences
-import org.jellyfin.androidtv.preference.constant.LoginBehavior
+import org.jellyfin.androidtv.auth.AuthenticationRepository
+import org.jellyfin.androidtv.preference.AuthenticationPreferences
 import org.jellyfin.androidtv.ui.preference.dsl.OptionsScreen
-import org.jellyfin.androidtv.ui.preference.dsl.checkbox
-import org.jellyfin.androidtv.ui.preference.dsl.enum
-import org.jellyfin.apiclient.interaction.ApiClient
+import org.jellyfin.androidtv.ui.preference.dsl.userSelector
 
 fun OptionsScreen.authenticationCategory(
-	userPreferences: UserPreferences,
-	apiClient: ApiClient
+	authenticationRepository: AuthenticationRepository,
+	authenticationPreferences: AuthenticationPreferences
 ) = category {
-	setTitle(R.string.pref_authentication_cat)
+	title = "Preferences"
 
-	enum<LoginBehavior> {
-		setTitle(R.string.pref_login_behavior_title)
-		bind {
-			set {
-				@Suppress("ControlFlowWithEmptyBody")
-				if (it == LoginBehavior.AUTO_LOGIN) {
-					// FIXME: Fix autologin preference
-				}
-
-				userPreferences[UserPreferences.loginBehavior] = it
-			}
-			get { userPreferences[UserPreferences.loginBehavior] }
-			default { userPreferences.getDefaultValue(UserPreferences.loginBehavior) }
-		}
-		depends {
-			false //FIXME
-		}
+	userSelector(authenticationRepository) {
+		title = "Automatically login"
 	}
 
-	checkbox {
-		setTitle(R.string.pref_prompt_pw)
-		bind(userPreferences, UserPreferences.passwordPromptEnabled)
-		depends {
-			false //FIXME
-		}
-	}
-
-	checkbox {
-		setTitle(R.string.pref_alt_pw_entry)
-		setContent(R.string.pref_alt_pw_entry_desc)
-		bind(userPreferences, UserPreferences.passwordDPadEnabled)
+	userSelector(authenticationRepository) {
+		title = "Service user"
 	}
 }
