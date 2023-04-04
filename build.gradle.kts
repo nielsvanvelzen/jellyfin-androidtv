@@ -10,8 +10,8 @@ buildscript {
 }
 
 subprojects {
+	// Configure linting
 	apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
-
 	detekt {
 		buildUponDefaultConfig = true
 		ignoreFailures = true
@@ -20,6 +20,22 @@ subprojects {
 
 		reports {
 			sarif.enabled = true
+		}
+	}
+
+	// Configure JDK targets
+	tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile> {
+		kotlinOptions {
+			jvmTarget = JavaVersion.VERSION_1_8.toString()
+		}
+	}
+
+	plugins.withType<com.android.build.gradle.BasePlugin> {
+		configure<com.android.build.gradle.BaseExtension> {
+			compileOptions {
+				sourceCompatibility = JavaVersion.VERSION_1_8
+				targetCompatibility = JavaVersion.VERSION_1_8
+			}
 		}
 	}
 }
