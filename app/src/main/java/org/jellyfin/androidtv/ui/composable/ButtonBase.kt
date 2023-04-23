@@ -1,10 +1,9 @@
 package org.jellyfin.androidtv.ui.composable
 
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -14,19 +13,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jellyfin.androidtv.R
 
 @Composable
 fun ButtonBase(
 	modifier: Modifier = Modifier,
-	content: @Composable () -> Unit
+	onClick: () -> Unit,
+	content: @Composable () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
 
@@ -43,12 +41,14 @@ fun ButtonBase(
 	CompositionLocalProvider(
 		LocalIndication provides rememberRipple(color = Color.White)
 	) {
-		Box(
+		Button(
 			modifier = modifier
-				.clip(RoundedCornerShape(4.dp))
-				.focusable()
-				.onFocusChanged { state -> focused = state.isFocused }
-				.background(backgroundColor)
+				.onFocusEvent { focused = it.isFocused },
+			onClick = onClick,
+			colors = ButtonDefaults.buttonColors(
+				backgroundColor = backgroundColor,
+			),
+			contentPadding = PaddingValues(),
 		) {
 			ProvideTextStyle(
 				value = TextStyle.Default.copy(
