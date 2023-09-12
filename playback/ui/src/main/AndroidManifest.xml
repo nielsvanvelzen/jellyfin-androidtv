@@ -1,6 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
-
+        <activity
+            android:name=".PlayerTestActivity"
+            android:colorMode="wideColorGamut"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|navigation"
+            android:hardwareAccelerated="true"
+            android:immersive="true"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:screenOrientation="user"
+            android:supportsPictureInPicture="true" />
     </application>
 </manifest>

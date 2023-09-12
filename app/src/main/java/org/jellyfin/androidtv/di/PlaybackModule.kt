@@ -20,8 +20,10 @@ import org.jellyfin.playback.core.mediasession.MediaSessionOptions
 import org.jellyfin.playback.core.mediasession.mediaSessionPlugin
 import org.jellyfin.playback.core.playbackManager
 import org.jellyfin.playback.exoplayer.exoPlayerPlugin
+import org.jellyfin.playback.jellyfin.BaseItemQueueManager
 import org.jellyfin.playback.jellyfin.jellyfinPlugin
 import org.koin.android.ext.koin.androidContext
+import org.jellyfin.playback.ui.PlayerTestActivity
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,18 +38,19 @@ val playbackModule = module {
 		val preferences = get<UserPreferences>()
 		val useRewrite = preferences[UserPreferences.playbackRewriteVideoEnabled] && BuildConfig.DEVELOPMENT
 
-		if (useRewrite) RewritePlaybackLauncher()
+		if (useRewrite) RewritePlaybackLauncher(get(), get())
 		else GarbagePlaybackLauncher(get())
 	}
 
 	single { createPlaybackManager() }
+	single { BaseItemQueueManager(get(), get()) }
 }
 
 fun Scope.createPlaybackManager() = playbackManager(androidContext()) {
 	install(exoPlayerPlugin(get()))
 	install(jellyfinPlugin(get(), get()))
 
-	val activityIntent = Intent(get(), MainActivity::class.java)
+	val activityIntent = Intent(get(), PlayerTestActivity::class.java)
 	val pendingIntent = PendingIntent.getActivity(get(), 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
 
 	val notificationChannelId = "mediasession"

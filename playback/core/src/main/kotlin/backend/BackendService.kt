@@ -1,10 +1,12 @@
 package org.jellyfin.playback.core.backend
 
+import androidx.core.view.doOnDetach
 import org.jellyfin.playback.core.mediastream.PlayableMediaStream
 import org.jellyfin.playback.core.model.PlayState
+import org.jellyfin.playback.core.view.PlayerSurfaceView
 
 /**
- * Service keeping track of the current playback backend.
+ * Service keeping track of the current playback backend and surface view.
  */
 class BackendService {
 	private var _backend: PlayerBackend? = null
@@ -12,11 +14,16 @@ class BackendService {
 
 	private var listeners = mutableListOf<PlayerBackendEventListener>()
 
+	private var _surfaceView: PlayerSurfaceView? = null
+	val surfaceView get() = _surfaceView
+
 	fun switchBackend(backend: PlayerBackend) {
 		_backend?.stop()
 		_backend?.setListener(null)
+		_backend?.setSurface(null)
 
 		_backend = backend.apply {
+			surfaceView?.surface?.let(::setSurface)
 			setListener(BackendEventListener())
 		}
 	}
@@ -45,5 +52,25 @@ class BackendService {
 		override fun onMediaStreamEnd(mediaStream: PlayableMediaStream) {
 			callListeners { onMediaStreamEnd(mediaStream) }
 		}
+	}
+
+	fun attach(surfaceView: PlayerSurfaceView) {
+		if (_surfaceView != null) throw IllegalStateException("A surface is already attached!")
+
+		_surfaceView = surfaceView.apply {
+			_backend?.setSurface(surface)
+
+			// Automatically detach
+			doOnDetach {
+				detach(surfaceView)
+			}
+		}
+	}
+
+	private fun detach(surfaceView: PlayerSurfaceView) {
+		if (surfaceView != _surfaceView) return
+
+		_surfaceView = null
+		_backend?.setSurface(null)
 	}
 }

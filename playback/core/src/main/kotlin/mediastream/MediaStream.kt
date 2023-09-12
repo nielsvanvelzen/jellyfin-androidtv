@@ -2,6 +2,9 @@ package org.jellyfin.playback.core.mediastream
 
 import org.jellyfin.playback.core.queue.item.QueueEntry
 
+// TODO: The PlaySessionId should be added to the MediaStream
+// TODO: The MediaStream should be exposed to state so it can be accessed in
+//       PlaySessionService to report with the PlaySessionId
 interface MediaStream {
 	val identifier: String
 	val conversionMethod: MediaConversionMethod

@@ -5,14 +5,17 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import org.jellyfin.playback.core.model.PlayState
 import org.jellyfin.playback.core.plugin.PlayerService
+import org.jellyfin.playback.core.queue.EmptyQueue
 import org.jellyfin.sdk.api.sockets.SocketInstance
 import org.jellyfin.sdk.api.sockets.addGeneralCommandsListener
+import org.jellyfin.sdk.api.sockets.addListener
 import org.jellyfin.sdk.api.sockets.addPlayStateCommandsListener
 import org.jellyfin.sdk.api.sockets.listener.SocketListener
 import org.jellyfin.sdk.model.api.GeneralCommandType
 import org.jellyfin.sdk.model.api.PlaystateCommand
 import org.jellyfin.sdk.model.extensions.get
 import org.jellyfin.sdk.model.extensions.ticks
+import org.jellyfin.sdk.model.socket.PlayMessage
 import kotlin.time.Duration
 
 class PlaySessionSocketService(
@@ -22,6 +25,11 @@ class PlaySessionSocketService(
 	private var listeners = mutableListOf<SocketListener>()
 
 	override suspend fun onInitialize() {
+		listeners += socketInstance.addListener<PlayMessage> { message ->
+			// TODO Create a queue with requested items
+			state.play(EmptyQueue)
+		}
+
 		// Player control
 		listeners += socketInstance.addPlayStateCommandsListener { message ->
 			coroutineScope.launch(Dispatchers.Main) {

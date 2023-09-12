@@ -13,6 +13,11 @@ android {
 
 	buildFeatures {
 		viewBinding = true
+		compose = true
+	}
+
+	composeOptions {
+		kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
 	}
 
 	lint {
@@ -44,6 +49,7 @@ dependencies {
 	implementation(libs.androidx.appcompat)
 	implementation(libs.androidx.constraintlayout)
 	implementation(libs.bundles.androidx.lifecycle)
+	implementation(libs.bundles.androidx.compose)
 	implementation(libs.androidx.media3.session)
 
 	// Dependency Injection

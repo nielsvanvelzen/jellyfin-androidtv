@@ -2,6 +2,7 @@ package org.jellyfin.playback.jellyfin
 
 import org.jellyfin.playback.core.plugin.playbackPlugin
 import org.jellyfin.playback.jellyfin.mediastream.AudioMediaStreamResolver
+import org.jellyfin.playback.jellyfin.mediastream.VideoMediaStreamResolver
 import org.jellyfin.playback.jellyfin.playsession.PlaySessionService
 import org.jellyfin.playback.jellyfin.playsession.PlaySessionSocketService
 import org.jellyfin.sdk.api.client.ApiClient
@@ -35,11 +36,21 @@ fun jellyfinPlugin(
 				audioCodec = "mp3",
 				videoCodec = "",
 				conditions = emptyList()
+			),
+			TranscodingProfile(
+				type = DlnaProfileType.VIDEO,
+				context = EncodingContext.STREAMING,
+				protocol = "hls",
+				container = "mp4",
+				audioCodec = "mp3",
+				videoCodec = "mp4",
+				conditions = emptyList()
 			)
 		),
 		xmlRootAttributes = emptyList(),
 	)
 	provide(AudioMediaStreamResolver(api, profile))
+	provide(VideoMediaStreamResolver(api, profile))
 
 	val playSessionService = PlaySessionService(api)
 	provide(playSessionService)

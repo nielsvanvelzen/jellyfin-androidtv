@@ -1,13 +1,16 @@
 package org.jellyfin.androidtv.ui.playback
 
 import android.content.Context
-import android.content.Intent
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.PreferredVideoPlayer
 import org.jellyfin.androidtv.ui.navigation.Destination
 import org.jellyfin.androidtv.ui.navigation.Destinations
+import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.navigation.activityDestination
 import org.jellyfin.androidtv.ui.playback.rewrite.PlaybackForwardingActivity
+import org.jellyfin.androidtv.util.runBlocking
+import org.jellyfin.playback.jellyfin.BaseItemQueueManager
+import org.jellyfin.playback.ui.PlayerTestActivity
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 
@@ -42,18 +45,17 @@ class GarbagePlaybackLauncher(
 	override fun interceptPlayRequest(context: Context, item: BaseItemDto?): Boolean = false
 }
 
-class RewritePlaybackLauncher : PlaybackLauncher {
+class RewritePlaybackLauncher(
+	private val baseItemQueueManager: BaseItemQueueManager,
+	private val navigationRepository: NavigationRepository,
+) : PlaybackLauncher {
 	override fun useExternalPlayer(itemType: BaseItemKind?) = false
 	override fun getPlaybackDestination(itemType: BaseItemKind?, position: Int) =
 		activityDestination<PlaybackForwardingActivity>()
 
 	override fun interceptPlayRequest(context: Context, item: BaseItemDto?): Boolean {
 		if (item == null) return false
-
-		val intent = Intent(context, PlaybackForwardingActivity::class.java)
-		intent.putExtra(PlaybackForwardingActivity.EXTRA_ITEM_ID, item.id)
-		context.startActivity(intent)
-
-		return true
+		navigationRepository.navigate(activityDestination<PlayerTestActivity>())
+		return runBlocking { baseItemQueueManager.play(item) }
 	}
 }

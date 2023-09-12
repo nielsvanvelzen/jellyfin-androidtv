@@ -1,5 +1,6 @@
 package org.jellyfin.playback.core.backend
 
+import android.view.SurfaceView
 import org.jellyfin.playback.core.mediastream.MediaStream
 import org.jellyfin.playback.core.mediastream.PlayableMediaStream
 import org.jellyfin.playback.core.model.PositionInfo
@@ -21,6 +22,7 @@ interface PlayerBackend {
 
 	// Mutation
 
+	fun setSurface(surfaceView: SurfaceView?)
 	fun prepareStream(stream: PlayableMediaStream)
 	fun playStream(stream: PlayableMediaStream)
 

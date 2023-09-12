@@ -1,5 +1,6 @@
 package org.jellyfin.androidtv.ui.playback.rewrite
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
@@ -8,6 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.ui.playback.VideoQueueManager
+import org.jellyfin.playback.ui.PlayerTestActivity
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -54,6 +56,9 @@ class PlaybackForwardingActivity : FragmentActivity() {
 				Timber.i(item.toString())
 
 				// TODO: Create queue, send to new playback manager, start new player UI
+				startActivity(Intent(baseContext, PlayerTestActivity::class.java).apply {
+					putExtra("itemId", item.id.toString())
+				})
 				finishAfterTransition()
 			}
 		}
