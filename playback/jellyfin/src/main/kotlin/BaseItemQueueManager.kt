@@ -4,6 +4,8 @@ import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.jellyfin.queue.AudioAlbumQueue
 import org.jellyfin.playback.jellyfin.queue.AudioInstantMixQueue
 import org.jellyfin.playback.jellyfin.queue.AudioTrackQueue
+import org.jellyfin.playback.jellyfin.queue.EpisodeQueue
+import org.jellyfin.playback.jellyfin.queue.MovieQueue
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -32,6 +34,13 @@ class BaseItemQueueManager(
 
 				AudioTrackQueue(item, api)
 			}
+
+
+			BaseItemKind.SERIES -> null
+			BaseItemKind.SEASON -> null
+			BaseItemKind.MOVIE -> MovieQueue(item, api)
+			BaseItemKind.EPISODE -> EpisodeQueue(item, api)
+
 			else -> null
 		} ?: return false
 

@@ -11,8 +11,8 @@ import org.jellyfin.playback.jellyfin.queue.item.BaseItemDtoUserQueueEntry
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.dynamicHlsApi
 import org.jellyfin.sdk.api.client.extensions.videosApi
-import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.DeviceProfile
+import org.jellyfin.sdk.model.constant.MediaType
 
 class VideoMediaStreamResolver(
 	val api: ApiClient,
@@ -52,7 +52,7 @@ class VideoMediaStreamResolver(
 		testStream: (stream: MediaStream) -> PlaySupportReport,
 	): PlayableMediaStream? {
 		if (queueEntry !is BaseItemDtoUserQueueEntry) return null
-		if (queueEntry.baseItem.type != BaseItemKind.AUDIO) return null
+		if (queueEntry.baseItem.mediaType != MediaType.Video) return null
 
 		val mediaInfo = getPlaybackInfo(queueEntry.baseItem)
 
