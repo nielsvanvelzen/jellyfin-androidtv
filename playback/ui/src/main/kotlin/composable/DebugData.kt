@@ -18,13 +18,13 @@ import kotlinx.coroutines.delay
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.core.mediasession.toMediaItem
 import org.jellyfin.playback.core.model.PositionInfo
-import org.koin.compose.rememberKoinInject
+import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun DebugData() {
-	val playbackManager = rememberKoinInject<PlaybackManager>()
+	val playbackManager = koinInject<PlaybackManager>()
 
 	val queue = playbackManager.state.queue
 	val state = playbackManager.state

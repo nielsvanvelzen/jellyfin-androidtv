@@ -6,6 +6,7 @@ import android.view.SurfaceView
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import org.jellyfin.playback.core.PlaybackManager
+import org.jellyfin.playback.core.model.VideoSize
 import kotlin.math.abs
 
 /**
@@ -19,23 +20,24 @@ class PlayerSurfaceView @JvmOverloads constructor(
 	defStyleRes: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
 	lateinit var playbackManager: PlaybackManager
+
 	val surface = SurfaceView(context, attrs).apply {
 		addView(this, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 	}
 
 	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-		val aspectRatio = playbackManager.state.videoSize.value.aspectRatio
-		if (aspectRatio <= 0f) return
+		val videoSize = playbackManager.state.videoSize.value
+		if (videoSize == VideoSize.EMPTY) return
 
 		val viewAspectRatio = width.toFloat() / height.toFloat()
-		val aspectDiff = aspectRatio / viewAspectRatio - 1
+		val aspectDiff = videoSize.aspectRatio / viewAspectRatio - 1
 		if (abs(aspectDiff) <= 0.1f) return
 
 		var width = measuredWidth
 		var height = measuredHeight
-		if (aspectDiff > 0f) height = (width / aspectRatio).toInt()
-		else width = (height * aspectRatio).toInt()
+		if (aspectDiff > 0f) height = (width / videoSize.aspectRatio).toInt()
+		else width = (height * videoSize.aspectRatio).toInt()
 
 		super.onMeasure(
 			MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
