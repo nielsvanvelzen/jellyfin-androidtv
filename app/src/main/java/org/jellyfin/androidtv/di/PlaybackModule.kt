@@ -23,7 +23,6 @@ import org.jellyfin.playback.exoplayer.exoPlayerPlugin
 import org.jellyfin.playback.jellyfin.BaseItemQueueManager
 import org.jellyfin.playback.jellyfin.jellyfinPlugin
 import org.koin.android.ext.koin.androidContext
-import org.jellyfin.playback.ui.PlayerTestActivity
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.milliseconds
@@ -50,7 +49,7 @@ fun Scope.createPlaybackManager() = playbackManager(androidContext()) {
 	install(exoPlayerPlugin(get()))
 	install(jellyfinPlugin(get(), get()))
 
-	val activityIntent = Intent(get(), PlayerTestActivity::class.java)
+	val activityIntent = Intent(get(), MainActivity::class.java)
 	val pendingIntent = PendingIntent.getActivity(get(), 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
 
 	val notificationChannelId = "mediasession"
