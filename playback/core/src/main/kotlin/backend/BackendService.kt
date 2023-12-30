@@ -15,7 +15,6 @@ class BackendService {
 	private var listeners = mutableListOf<PlayerBackendEventListener>()
 
 	private var _surfaceView: PlayerSurfaceView? = null
-	val surfaceView get() = _surfaceView
 
 	fun switchBackend(backend: PlayerBackend) {
 		_backend?.stop()
@@ -23,7 +22,7 @@ class BackendService {
 		_backend?.setSurface(null)
 
 		_backend = backend.apply {
-			surfaceView?.surface?.let(::setSurface)
+			_surfaceView?.surface?.let(::setSurface)
 			setListener(BackendEventListener())
 		}
 	}
@@ -54,7 +53,7 @@ class BackendService {
 		}
 	}
 
-	fun attach(surfaceView: PlayerSurfaceView) {
+	internal fun attachSurfaceView(surfaceView: PlayerSurfaceView) {
 		if (_surfaceView != null) throw IllegalStateException("A surface is already attached!")
 
 		_surfaceView = surfaceView.apply {
@@ -62,15 +61,11 @@ class BackendService {
 
 			// Automatically detach
 			doOnDetach {
-				detach(surfaceView)
+				if (surfaceView == _surfaceView) {
+					_surfaceView = null
+					_backend?.setSurface(null)
+				}
 			}
 		}
-	}
-
-	private fun detach(surfaceView: PlayerSurfaceView) {
-		if (surfaceView != _surfaceView) return
-
-		_surfaceView = null
-		_backend?.setSurface(null)
 	}
 }

@@ -47,7 +47,7 @@ class PlayerSurfaceView @JvmOverloads constructor(
 		super.onAttachedToWindow()
 
 		if (!isInEditMode) {
-			playbackManager.backendService.attach(this)
+			playbackManager.backendService.attachSurfaceView(this)
 		}
 	}
 }

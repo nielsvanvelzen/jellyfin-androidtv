@@ -35,7 +35,6 @@ class BaseItemQueueManager(
 				AudioTrackQueue(item, api)
 			}
 
-
 			BaseItemKind.SERIES -> null
 			BaseItemKind.SEASON -> null
 			BaseItemKind.MOVIE -> MovieQueue(item, api)
