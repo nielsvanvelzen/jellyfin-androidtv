@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,9 +49,10 @@ private fun rememberPositionInfo(playerState: PlayerState): PositionInfo {
 }
 
 @Composable
-fun PlayerControls() {
-	val playbackManager = koinInject<PlaybackManager>()
-	val positionInfo = rememberPositionInfo(playerState = playbackManager.state)
+fun PlayerControls(
+	playerState: PlayerState,
+) {
+	val positionInfo = rememberPositionInfo(playerState)
 
 	Column {
 		DebugData()
@@ -68,6 +70,9 @@ fun PlayerControls() {
 
 @Composable
 fun VideoPlayerScreen() {
+	val playbackManager = koinInject<PlaybackManager>()
+	val playerState = playbackManager.state
+
 	Box(
 		modifier = Modifier
 			.background(Color.Black),
@@ -82,8 +87,13 @@ fun VideoPlayerScreen() {
 		Box(
 			modifier = Modifier
 				.align(Alignment.BottomCenter),
-			content = { PlayerControls() }
+			content = { PlayerControls(playerState) }
 		)
+	}
+
+	// Stop playback when screen closes
+	DisposableEffect(playerState) {
+		onDispose { playerState.stop() }
 	}
 }
 
