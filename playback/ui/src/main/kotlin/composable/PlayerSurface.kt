@@ -17,6 +17,7 @@ fun PlayerSurface(
 ) {
 	val playbackManager = koinInject<PlaybackManager>()
 	val videoSize by playbackManager.state.videoSize.collectAsState()
+	val aspectRatio = if (videoSize == VideoSize.EMPTY) 1f else videoSize.aspectRatio
 
 	AndroidView(
 		factory = { context ->
@@ -25,9 +26,7 @@ fun PlayerSurface(
 			}
 		},
 		modifier = Modifier
-			.apply {
-				if (videoSize != VideoSize.EMPTY) aspectRatio(videoSize.aspectRatio, true)
-			}
+			.aspectRatio(aspectRatio)
 			.then(modifier)
 	)
 }

@@ -7,6 +7,7 @@ import org.jellyfin.androidtv.ui.navigation.Destination
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.navigation.fragmentDestination
+import org.jellyfin.androidtv.ui.playback.rewrite.VideoPlayerFragment
 import org.jellyfin.androidtv.util.runBlocking
 import org.jellyfin.playback.jellyfin.BaseItemQueueManager
 import org.jellyfin.sdk.model.api.BaseItemDto
