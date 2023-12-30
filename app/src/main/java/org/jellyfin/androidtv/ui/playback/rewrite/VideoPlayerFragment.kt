@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,26 +25,41 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import composable.PlayerSurface
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.ui.ScreensaverViewModel
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.core.PlayerState
+import org.jellyfin.playback.core.model.PlayState
 import org.jellyfin.playback.core.model.PositionInfo
 import org.jellyfin.playback.ui.composable.DebugData
 import org.jellyfin.playback.ui.composable.DebugToolbar
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.compose.koinInject
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
+
+// Modulo operator (%) for Duration
+private operator fun Duration.rem(other: Duration): Duration = (inWholeNanoseconds % other.inWholeNanoseconds).nanoseconds
 
 @Composable
-private fun rememberPositionInfo(playerState: PlayerState): PositionInfo {
+private fun rememberPositionInfo(
+	playerState: PlayerState,
+	frequency: Duration = 1.seconds,
+): PositionInfo {
 	var positionInfo by remember { mutableStateOf(PositionInfo.EMPTY) }
+	val playState by playerState.playState.collectAsState()
 
-	LaunchedEffect(playerState) {
-		while (true) {
-			positionInfo = playerState.positionInfo
-			delay(100.milliseconds)
-		}
+	LaunchedEffect(playState, positionInfo.duration) {
+		do {
+			withContext(Dispatchers.Main) {
+				positionInfo = playerState.positionInfo
+			}
+
+			delay(frequency - (positionInfo.active % frequency))
+		} while (playState == PlayState.PLAYING)
 	}
 
 	return positionInfo
@@ -54,9 +71,16 @@ fun PlayerControls(
 ) {
 	val positionInfo = rememberPositionInfo(playerState)
 
-	Column {
+	Column(
+		modifier = Modifier.background(Color.Black.copy(alpha = 0.2f))
+	) {
 		DebugData()
 		DebugToolbar()
+
+		Text(
+			text = "${positionInfo.active} / ${positionInfo.duration}",
+			color = Color.Red,
+		)
 
 		LinearProgressIndicator(
 			progress = (positionInfo.active / positionInfo.duration).toFloat(),
