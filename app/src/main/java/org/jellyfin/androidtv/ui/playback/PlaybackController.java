@@ -32,7 +32,6 @@ import org.jellyfin.androidtv.util.apiclient.ReportingHelper;
 import org.jellyfin.androidtv.util.apiclient.StreamHelper;
 import org.jellyfin.androidtv.util.profile.ExoPlayerProfile;
 import org.jellyfin.androidtv.util.profile.LibVlcProfile;
-import org.jellyfin.androidtv.util.sdk.ModelUtils;
 import org.jellyfin.androidtv.util.sdk.compat.JavaCompat;
 import org.jellyfin.androidtv.util.sdk.compat.ModelCompat;
 import org.jellyfin.apiclient.interaction.ApiClient;
@@ -41,7 +40,6 @@ import org.jellyfin.apiclient.model.dlna.DeviceProfile;
 import org.jellyfin.apiclient.model.dlna.SubtitleDeliveryMethod;
 import org.jellyfin.apiclient.model.dto.BaseItemDto;
 import org.jellyfin.apiclient.model.livetv.ChannelInfoDto;
-import org.jellyfin.apiclient.model.mediainfo.SubtitleTrackInfo;
 import org.jellyfin.apiclient.model.session.PlayMethod;
 import org.jellyfin.sdk.model.api.BaseItemKind;
 import org.jellyfin.sdk.model.api.LocationType;
@@ -918,7 +916,6 @@ public class PlaybackController implements PlaybackControllerNotifiable {
         Timber.d("Setting subtitle index to: %d", index);
 
         // clear subtitles first
-        if (mFragment != null) mFragment.addManualSubtitles(null);
         mVideoManager.disableSubs();
         // clear the default in case there's an error loading the subtitles
         mDefaultSubIndex = -1;
@@ -960,74 +957,26 @@ public class PlaybackController implements PlaybackControllerNotifiable {
         // when burnt-in subtitles are selected, mCurrentOptions SubtitleStreamIndex is set in startItem() as soon as playback starts
         // otherwise mCurrentOptions SubtitleStreamIndex is kept null until now so we knew subtitles needed to be enabled but weren't already
 
-        switch (streamInfo.getDeliveryMethod()) {
-            case Embed:
-                if (!mVideoManager.isNativeMode()) {
-                    if (!mVideoManager.setSubtitleTrack(index, getCurrentlyPlayingItem().getMediaStreams())) {
-                        // error selecting internal subs
-                        if (mFragment != null)
-                            Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
-                    } else {
-                        mCurrentOptions.setSubtitleStreamIndex(index);
-                        mDefaultSubIndex = index;
-                    }
+        if (streamInfo.getDeliveryMethod() == SubtitleDeliveryMethod.Embed) {
+            if (!mVideoManager.isNativeMode()) {
+                if (!mVideoManager.setSubtitleTrack(index, getCurrentlyPlayingItem().getMediaStreams())) {
+                    // error selecting internal subs
+                    if (mFragment != null)
+                        Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
                 } else {
-                    if (!mVideoManager.setExoPlayerTrack(index, MediaStreamType.SUBTITLE, getCurrentlyPlayingItem().getMediaStreams())) {
-                        // error selecting internal subs
-                        if (mFragment != null)
-                            Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
-                    } else {
-                        mCurrentOptions.setSubtitleStreamIndex(index);
-                        mDefaultSubIndex = index;
-                    }
+                    mCurrentOptions.setSubtitleStreamIndex(index);
+                    mDefaultSubIndex = index;
                 }
-                break;
-            case External:
-                if (mFragment != null) mFragment.showSubLoadingMsg(true);
-
-                stream = ModelUtils.withDelivery(
-                        stream,
-                        org.jellyfin.sdk.model.api.SubtitleDeliveryMethod.EXTERNAL,
-                        String.format(
-                                "%1$s/Videos/%2$s/%3$s/Subtitles/%4$s/0/Stream.JSON",
-                                apiClient.getValue().getApiUrl(),
-                                mCurrentStreamInfo.getItemId(),
-                                mCurrentStreamInfo.getMediaSourceId(),
-                                String.valueOf(stream.getIndex())
-                        )
-                );
-                apiClient.getValue().getSubtitles(stream.getDeliveryUrl(), new Response<SubtitleTrackInfo>() {
-
-                    @Override
-                    public void onResponse(final SubtitleTrackInfo info) {
-
-                        if (info != null) {
-                            Timber.d("Adding json subtitle track to player");
-                            if (mFragment != null) mFragment.addManualSubtitles(info);
-                            mCurrentOptions.setSubtitleStreamIndex(index);
-                            mDefaultSubIndex = index;
-                        } else {
-                            Timber.e("Empty subtitle result");
-                            if (mFragment != null) {
-                                Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
-                                mFragment.showSubLoadingMsg(false);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception ex) {
-                        Timber.e(ex, "Error downloading subtitles");
-                        if (mFragment != null) {
-                            Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
-                            mFragment.showSubLoadingMsg(false);
-                        }
-                    }
-
-                });
-                break;
-            case Hls:
-                break;
+            } else {
+                if (!mVideoManager.setExoPlayerTrack(index, MediaStreamType.SUBTITLE, getCurrentlyPlayingItem().getMediaStreams())) {
+                    // error selecting internal subs
+                    if (mFragment != null)
+                        Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
+                } else {
+                    mCurrentOptions.setSubtitleStreamIndex(index);
+                    mDefaultSubIndex = index;
+                }
+            }
         }
     }
 
@@ -1478,8 +1427,6 @@ public class PlaybackController implements PlaybackControllerNotifiable {
                 // crossed fire off an async routine to update the program info
                 updateTvProgramInfo();
             }
-            if (mFragment != null && finishedInitialSeek)
-                mFragment.updateSubtitles(mCurrentPosition - getSubtitleDelay());
         }
         if (mFragment != null)
             mFragment.setCurrentTime(mCurrentPosition);
