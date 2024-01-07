@@ -32,7 +32,6 @@ class UserViewsRepositoryImpl(
 	private companion object {
 		private val unsupportedCollectionTypes = arrayOf(
 			CollectionType.BOOKS,
-			CollectionType.FOLDERS
 		)
 
 		private val disallowViewSelectionCollectionTypes = arrayOf(
