@@ -61,6 +61,8 @@ public class ItemLauncher {
             case MUSIC:
             case LIVETV:
                 return Destinations.INSTANCE.librarySmartScreen(baseItem);
+            case FOLDERS:
+                return Destinations.INSTANCE.browser(baseItem.getId());
             default:
                 return Destinations.INSTANCE.libraryBrowser(baseItem);
         }

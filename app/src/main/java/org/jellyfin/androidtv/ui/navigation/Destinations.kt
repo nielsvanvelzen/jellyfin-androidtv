@@ -11,6 +11,7 @@ import org.jellyfin.androidtv.ui.browsing.ByLetterFragment
 import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
+import org.jellyfin.androidtv.ui.browsing2.BrowserFragment
 import org.jellyfin.androidtv.ui.home.HomeFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
@@ -38,6 +39,10 @@ object Destinations {
 	)
 
 	// Browsing
+	fun browser(item: UUID) = fragmentDestination<BrowserFragment>(
+		BrowserFragment.EXTRA_ID to item.toString(),
+	)
+
 	// TODO only pass item id instead of complete JSON to browsing destinations
 	fun libraryBrowser(item: BaseItemDto) = fragmentDestination<BrowseGridFragment>(
 		Extras.Folder to Json.Default.encodeToString(item),
