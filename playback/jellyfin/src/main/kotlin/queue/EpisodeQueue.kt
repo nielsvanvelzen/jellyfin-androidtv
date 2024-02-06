@@ -23,7 +23,7 @@ class EpisodeQueue(
 
 	override suspend fun loadPage(offset: Int, size: Int): Collection<QueueEntry> {
 		val result by api.itemsApi.getItemsByUserId(
-			parentId = episode.parentId,
+			parentId = episode.seasonId ?: episode.seriesId ?: episode.parentId,
 			parentIndexNumber = episode.parentIndexNumber,
 			recursive = true,
 			mediaTypes = listOf(MediaType.Video),
