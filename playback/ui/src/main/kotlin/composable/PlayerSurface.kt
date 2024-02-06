@@ -1,4 +1,4 @@
-package composable
+package org.jellyfin.playback.ui.composable
 
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable

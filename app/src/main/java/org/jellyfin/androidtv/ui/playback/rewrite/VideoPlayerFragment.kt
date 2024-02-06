@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.TextStyle
 import androidx.fragment.app.Fragment
-import composable.PlayerSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -37,6 +36,7 @@ import org.jellyfin.playback.core.model.PlayState
 import org.jellyfin.playback.core.model.PositionInfo
 import org.jellyfin.playback.ui.composable.DebugData
 import org.jellyfin.playback.ui.composable.DebugToolbar
+import org.jellyfin.playback.ui.composable.PlayerSurface
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.compose.koinInject
 import kotlin.time.Duration
