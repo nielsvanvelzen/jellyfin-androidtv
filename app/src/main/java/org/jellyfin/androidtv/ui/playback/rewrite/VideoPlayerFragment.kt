@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.text.TextStyle
 import androidx.fragment.app.Fragment
 import composable.PlayerSurface
 import kotlinx.coroutines.Dispatchers
@@ -71,24 +73,26 @@ fun PlayerControls(
 ) {
 	val positionInfo = rememberPositionInfo(playerState)
 
-	Column(
-		modifier = Modifier.background(Color.Black.copy(alpha = 0.2f))
-	) {
-		DebugData()
-		DebugToolbar()
+	ProvideTextStyle(value = TextStyle.Default.copy(color = Color.White)) {
+		Column(
+			modifier = Modifier.background(Color.Black.copy(alpha = 0.2f))
+		) {
+			DebugData()
+			DebugToolbar()
 
-		Text(
-			text = "${positionInfo.active} / ${positionInfo.duration}",
-			color = Color.Red,
-		)
+			Text(
+				text = "${positionInfo.active} / ${positionInfo.duration}",
+				color = Color.Red,
+			)
 
-		LinearProgressIndicator(
-			progress = (positionInfo.active / positionInfo.duration).toFloat(),
-			color = Color.White,
-			backgroundColor = Color.White.copy(alpha = 0.2f),
-			strokeCap = StrokeCap.Round,
-			modifier = Modifier.fillMaxWidth()
-		)
+			LinearProgressIndicator(
+				progress = (positionInfo.active / positionInfo.duration).toFloat(),
+				color = Color.White,
+				backgroundColor = Color.White.copy(alpha = 0.2f),
+				strokeCap = StrokeCap.Round,
+				modifier = Modifier.fillMaxWidth()
+			)
+		}
 	}
 }
 
