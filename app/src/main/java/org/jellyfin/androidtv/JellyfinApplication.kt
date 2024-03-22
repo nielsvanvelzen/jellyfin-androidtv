@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.acra.ACRA
-import org.jellyfin.androidtv.data.eventhandling.SocketHandler
 import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.integration.LeanbackChannelWorker
 import org.jellyfin.androidtv.telemetry.TelemetryService
@@ -36,7 +35,6 @@ class JellyfinApplication : Application() {
 	 */
 	suspend fun onSessionStart() = withContext(Dispatchers.IO) {
 		val workManager by inject<WorkManager>()
-		val socketListener by inject<SocketHandler>()
 
 		// Update background worker
 		launch {
@@ -52,9 +50,6 @@ class JellyfinApplication : Application() {
 					.build()
 			).await()
 		}
-
-		// Update WebSockets
-		launch { socketListener.updateSession() }
 	}
 
 	override fun onLowMemory() {

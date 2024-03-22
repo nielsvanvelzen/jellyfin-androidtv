@@ -4,11 +4,14 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Build
 import android.widget.Toast
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.data.model.DataRefreshService
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
@@ -23,7 +26,6 @@ import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.sockets.subscribe
 import org.jellyfin.sdk.api.sockets.subscribeGeneralCommand
-import org.jellyfin.sdk.api.sockets.subscribeGeneralCommands
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.GeneralCommandType
 import org.jellyfin.sdk.model.api.LibraryChangedMessage
@@ -50,40 +52,48 @@ class SocketHandler(
 	private val itemLauncher: ItemLauncher,
 	private val playbackHelper: PlaybackHelper,
 ) {
-	private val coroutineScope = CoroutineScope(Dispatchers.IO)
-
-	suspend fun updateSession() {
-		try {
-			api.sessionApi.postCapabilities(
-				playableMediaTypes = listOf(MediaType.VIDEO, MediaType.AUDIO),
-				supportsMediaControl = true,
-				supportedCommands = buildList {
-					add(GeneralCommandType.DISPLAY_CONTENT)
-					add(GeneralCommandType.SET_SUBTITLE_STREAM_INDEX)
-					add(GeneralCommandType.SET_AUDIO_STREAM_INDEX)
-
-					add(GeneralCommandType.DISPLAY_MESSAGE)
-					add(GeneralCommandType.SEND_STRING)
-
-					// Note: These are used in the PlaySessionSocketService
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !audioManager.isVolumeFixed) {
-						add(GeneralCommandType.VOLUME_UP)
-						add(GeneralCommandType.VOLUME_DOWN)
-						add(GeneralCommandType.SET_VOLUME)
-
-						add(GeneralCommandType.MUTE)
-						add(GeneralCommandType.UNMUTE)
-						add(GeneralCommandType.TOGGLE_MUTE)
-					}
-				},
-			)
-		} catch (err: ApiClientException) {
-			Timber.e(err, "Unable to update capabilities")
-			return
+	fun runOnLifecycle(lifecycle: Lifecycle) {
+		lifecycle.coroutineScope.launch {
+			lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				updateCapabilities()
+				subscribe(this)
+			}
 		}
 	}
 
-	init {
+	private suspend fun updateCapabilities(): Boolean = try {
+		api.sessionApi.postCapabilities(
+			playableMediaTypes = listOf(MediaType.VIDEO, MediaType.AUDIO),
+			supportsMediaControl = true,
+			supportedCommands = buildList {
+				add(GeneralCommandType.DISPLAY_CONTENT)
+				add(GeneralCommandType.SET_SUBTITLE_STREAM_INDEX)
+				add(GeneralCommandType.SET_AUDIO_STREAM_INDEX)
+
+				add(GeneralCommandType.DISPLAY_MESSAGE)
+				add(GeneralCommandType.SEND_STRING)
+
+				// Note: These are used in the PlaySessionSocketService
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !audioManager.isVolumeFixed) {
+					add(GeneralCommandType.VOLUME_UP)
+					add(GeneralCommandType.VOLUME_DOWN)
+					add(GeneralCommandType.SET_VOLUME)
+
+					add(GeneralCommandType.MUTE)
+					add(GeneralCommandType.UNMUTE)
+					add(GeneralCommandType.TOGGLE_MUTE)
+				}
+			},
+		)
+
+		true
+	} catch (err: ApiClientException) {
+		Timber.e(err, "Unable to update capabilities")
+
+		false
+	}
+
+	private suspend fun subscribe(coroutineScope: CoroutineScope) {
 		api.webSocket.apply {
 			// Library
 			subscribe<LibraryChangedMessage>()
@@ -136,13 +146,12 @@ class SocketHandler(
 				}
 				.launchIn(coroutineScope)
 
-			subscribeGeneralCommands(setOf(GeneralCommandType.DISPLAY_MESSAGE, GeneralCommandType.SEND_STRING))
+			subscribeGeneralCommand(GeneralCommandType.DISPLAY_MESSAGE)
 				.onEach { message ->
 					val header by message
 					val text by message
-					val string by message
 
-					onDisplayMessage(header, text ?: string)
+					onDisplayMessage(header, text)
 				}
 				.launchIn(coroutineScope)
 		}
@@ -174,7 +183,9 @@ class SocketHandler(
 	}
 
 	@Suppress("ComplexMethod")
-	private suspend fun onPlayStateMessage(message: PlaystateMessage) = withContext(Dispatchers.Main) {
+	private suspend fun onPlayStateMessage(
+		message: PlaystateMessage,
+	) = withContext(Dispatchers.Main) {
 		Timber.i("Received PlayStateMessage with command ${message.data?.command}")
 
 		// Audio playback uses (Rewrite)MediaManager, (legacy) video playback uses playbackController
@@ -205,7 +216,10 @@ class SocketHandler(
 		}
 	}
 
-	private suspend fun onDisplayContent(itemId: UUID, itemKind: BaseItemKind) = withContext(Dispatchers.Main) {
+	private suspend fun onDisplayContent(
+		itemId: UUID,
+		itemKind: BaseItemKind,
+	) = withContext(Dispatchers.Main) {
 		val playbackController = playbackControllerContainer.playbackController
 
 		if (playbackController?.isPlaying == true || playbackController?.isPaused == true) {
@@ -226,13 +240,13 @@ class SocketHandler(
 		}
 	}
 
-	private fun onDisplayMessage(header: String?, text: String?) {
+	private suspend fun onDisplayMessage(header: String?, text: String?) {
 		val toastMessage = buildString {
 			if (!header.isNullOrBlank()) append(header, ": ")
 			append(text)
 		}
 
-		runBlocking(Dispatchers.Main) {
+		withContext(Dispatchers.Main) {
 			Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show()
 		}
 	}
