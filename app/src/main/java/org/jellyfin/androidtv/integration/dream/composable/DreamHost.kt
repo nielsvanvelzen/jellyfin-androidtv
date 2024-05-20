@@ -3,6 +3,7 @@ package org.jellyfin.androidtv.integration.dream.composable
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,8 +18,8 @@ import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.integration.dream.model.DreamContent
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.ClockBehavior
-import org.jellyfin.androidtv.ui.composable.rememberMediaItem
-import org.jellyfin.androidtv.ui.playback.MediaManager
+import org.jellyfin.playback.core.PlaybackManager
+import org.jellyfin.playback.jellyfin.queue.baseItem
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.extensions.imageApi
@@ -36,12 +37,12 @@ import kotlin.time.Duration.Companion.seconds
 fun DreamHost() {
 	val api = koinInject<ApiClient>()
 	val userPreferences = koinInject<UserPreferences>()
-	val mediaManager = koinInject<MediaManager>()
+	val playbackManager = koinInject<PlaybackManager>()
 	val imageLoader = koinInject<ImageLoader>()
 	val context = LocalContext.current
 
 	var libraryShowcase by remember { mutableStateOf<DreamContent.LibraryShowcase?>(null) }
-	val mediaItem by rememberMediaItem(mediaManager)
+	val queueEntry by playbackManager.state.queue.entry.collectAsState()
 
 	LaunchedEffect(true) {
 		delay(2.seconds)
@@ -56,7 +57,7 @@ fun DreamHost() {
 
 	DreamView(
 		content = when {
-			mediaItem?.mediaType == MediaType.AUDIO -> DreamContent.NowPlaying(mediaItem)
+			queueEntry?.baseItem?.mediaType == MediaType.AUDIO -> DreamContent.NowPlaying(queueEntry!!)
 			libraryShowcase != null -> libraryShowcase!!
 			else -> DreamContent.Logo
 		},

@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,10 +32,13 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import org.jellyfin.androidtv.integration.dream.model.DreamContent
 import org.jellyfin.androidtv.ui.composable.AsyncImage
+import org.jellyfin.androidtv.ui.composable.LyricsDtoBox
 import org.jellyfin.androidtv.ui.composable.blurHashPainter
-import org.jellyfin.androidtv.ui.composable.overscan
+import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.playback.AudioEventListener
 import org.jellyfin.androidtv.ui.playback.MediaManager
+import org.jellyfin.playback.jellyfin.lyrics
+import org.jellyfin.playback.jellyfin.queue.baseItem
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.model.api.ImageFormat
@@ -53,7 +56,10 @@ fun DreamContentNowPlaying(
 ) {
 	val api = koinInject<ApiClient>()
 	val mediaManager = koinInject<MediaManager>()
-	val item = content.item ?: return@Box
+	val item = content.queueEntry.baseItem ?: return@Box
+	val itemDuration = item.runTimeTicks?.ticks ?: Duration.ZERO
+	// TODO: This (probabably) does not update UI when lyrics change (add/update/remove)
+	val lyrics = content.queueEntry.lyrics
 
 	val primaryImageTag = item.imageTags?.get(ImageType.PRIMARY)
 	val (imageItemId, imageTag) = when {
@@ -74,6 +80,28 @@ fun DreamContentNowPlaying(
 		)
 
 		DreamContentVignette()
+	}
+
+
+	var playbackPosition by remember { mutableLongStateOf(0L) }
+	DisposableEffect(Unit) {
+		val listener = object : AudioEventListener {
+			override fun onProgress(pos: Long) {
+				playbackPosition = pos
+			}
+		}
+
+		mediaManager.addAudioEventListener(listener)
+		onDispose { mediaManager.removeAudioEventListener(listener) }
+	}
+
+	// Test
+	if (lyrics != null) {
+		LyricsDtoBox(
+			lyricDto = lyrics,
+			currentTimestamp = playbackPosition.milliseconds,
+			duration = itemDuration
+		)
 	}
 
 	// Overlay
@@ -131,22 +159,6 @@ fun DreamContentNowPlaying(
 
 			Spacer(modifier = Modifier.height(10.dp))
 
-			var progress by remember { mutableFloatStateOf(0f) }
-			DisposableEffect(Unit) {
-				val listener = object : AudioEventListener {
-					override fun onProgress(pos: Long) {
-						val duration = item.runTimeTicks?.ticks ?: Duration.ZERO
-						progress = (pos.milliseconds / duration).toFloat()
-					}
-				}
-
-				mediaManager.addAudioEventListener(listener)
-
-				onDispose {
-					mediaManager.removeAudioEventListener(listener)
-				}
-			}
-
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
@@ -156,7 +168,10 @@ fun DreamContentNowPlaying(
 						// Background
 						drawRect(Color.White, alpha = 0.2f)
 						// Foreground
-						drawRect(Color.White, size = size.copy(width = size.width * progress))
+						drawRect(
+							Color.White,
+							size = size.copy(width = size.width * (playbackPosition.milliseconds / itemDuration).toFloat())
+						)
 					}
 			)
 		}
