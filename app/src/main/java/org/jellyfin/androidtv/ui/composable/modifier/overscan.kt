@@ -1,4 +1,4 @@
-package org.jellyfin.androidtv.ui.composable
+package org.jellyfin.androidtv.ui.composable.modifier
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
