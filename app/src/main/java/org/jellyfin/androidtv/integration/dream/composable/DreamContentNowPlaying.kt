@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,8 +32,9 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import org.jellyfin.androidtv.integration.dream.model.DreamContent
 import org.jellyfin.androidtv.ui.composable.AsyncImage
+import org.jellyfin.androidtv.ui.composable.LyricsDtoBox
 import org.jellyfin.androidtv.ui.composable.blurHashPainter
-import org.jellyfin.androidtv.ui.composable.overscan
+import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.playback.AudioEventListener
 import org.jellyfin.androidtv.ui.playback.MediaManager
 import org.jellyfin.sdk.api.client.ApiClient
@@ -53,17 +54,32 @@ fun DreamContentNowPlaying(
 ) {
 	val api = koinInject<ApiClient>()
 	val mediaManager = koinInject<MediaManager>()
-	val item = content.item ?: return@Box
+	val itemDuration = content.item.runTimeTicks?.ticks ?: Duration.ZERO
 
-	val primaryImageTag = item.imageTags?.get(ImageType.PRIMARY)
+	// TODO: Avoid dependency on mediamanager from here, move to viewmodel
+	var playbackPosition by remember { mutableLongStateOf(0L) }
+	DisposableEffect(Unit) {
+		val listener = object : AudioEventListener {
+			override fun onProgress(pos: Long) {
+				playbackPosition = pos
+			}
+		}
+
+		mediaManager.addAudioEventListener(listener)
+		onDispose { mediaManager.removeAudioEventListener(listener) }
+	}
+
+	val primaryImageTag = content.item.imageTags?.get(ImageType.PRIMARY)
 	val (imageItemId, imageTag) = when {
-		primaryImageTag != null -> item.id to primaryImageTag
-		(item.albumId != null && item.albumPrimaryImageTag != null) -> item.albumId to item.albumPrimaryImageTag
+		primaryImageTag != null -> content.item.id to primaryImageTag
+		(content.item.albumId != null && content.item.albumPrimaryImageTag != null) -> content.item.albumId to content.item.albumPrimaryImageTag
 		else -> null to null
 	}
 
-	val imageBlurHash =
-		imageTag?.let { tag -> item.imageBlurHashes?.get(ImageType.PRIMARY)?.get(tag) }
+	// Background
+	val imageBlurHash = imageTag?.let { tag ->
+		content.item.imageBlurHashes?.get(ImageType.PRIMARY)?.get(tag)
+	}
 	if (imageBlurHash != null) {
 		Image(
 			painter = blurHashPainter(imageBlurHash, IntSize(32, 32)),
@@ -76,7 +92,17 @@ fun DreamContentNowPlaying(
 		DreamContentVignette()
 	}
 
-	// Overlay
+	// Lyrics overlay (on top of background)
+	if (content.lyrics != null) {
+		LyricsDtoBox(
+			lyricDto = content.lyrics,
+			currentTimestamp = playbackPosition.milliseconds,
+			duration = itemDuration,
+			fontSize = 22.sp,
+		)
+	}
+
+	// Metadata overlay (includes title / progress)
 	Row(
 		verticalAlignment = Alignment.Bottom,
 		horizontalArrangement = Arrangement.spacedBy(20.dp),
@@ -105,7 +131,7 @@ fun DreamContentNowPlaying(
 				.padding(bottom = 10.dp)
 		) {
 			Text(
-				text = item.name.orEmpty(),
+				text = content.item.name.orEmpty(),
 				style = TextStyle(
 					color = Color.White,
 					fontSize = 26.sp,
@@ -113,7 +139,7 @@ fun DreamContentNowPlaying(
 			)
 
 			Text(
-				text = item.run {
+				text = content.item.run {
 					val artistNames = artists.orEmpty()
 					val albumArtistNames = albumArtists?.mapNotNull { it.name }.orEmpty()
 
@@ -131,22 +157,6 @@ fun DreamContentNowPlaying(
 
 			Spacer(modifier = Modifier.height(10.dp))
 
-			var progress by remember { mutableFloatStateOf(0f) }
-			DisposableEffect(Unit) {
-				val listener = object : AudioEventListener {
-					override fun onProgress(pos: Long) {
-						val duration = item.runTimeTicks?.ticks ?: Duration.ZERO
-						progress = (pos.milliseconds / duration).toFloat()
-					}
-				}
-
-				mediaManager.addAudioEventListener(listener)
-
-				onDispose {
-					mediaManager.removeAudioEventListener(listener)
-				}
-			}
-
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
@@ -156,7 +166,10 @@ fun DreamContentNowPlaying(
 						// Background
 						drawRect(Color.White, alpha = 0.2f)
 						// Foreground
-						drawRect(Color.White, size = size.copy(width = size.width * progress))
+						drawRect(
+							Color.White,
+							size = size.copy(width = size.width * (playbackPosition.milliseconds / itemDuration).toFloat())
+						)
 					}
 			)
 		}
