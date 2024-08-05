@@ -33,6 +33,7 @@ import org.jellyfin.playback.core.queue.QueueEntry
 import org.jellyfin.playback.core.support.PlaySupportReport
 import org.jellyfin.playback.core.ui.PlayerSubtitleView
 import org.jellyfin.playback.core.ui.PlayerSurfaceView
+import org.jellyfin.playback.media3.exoplayer.ssa.ExtendedSubtitleParserFactory
 import org.jellyfin.playback.media3.exoplayer.support.getPlaySupportReport
 import org.jellyfin.playback.media3.exoplayer.support.toFormats
 import timber.log.Timber
@@ -84,6 +85,8 @@ class ExoPlayerBackend(
 					}
 				),
 				DefaultExtractorsFactory().apply {
+					setSubtitleParserFactory(ExtendedSubtitleParserFactory())
+
 					val isLowRamDevice =
 						context.getSystemService<ActivityManager>()?.isLowRamDevice == true
 					setTsExtractorTimestampSearchBytes(
