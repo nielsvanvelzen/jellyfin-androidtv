@@ -6,126 +6,148 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.compose.AndroidFragment
+import androidx.fragment.compose.FragmentState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.auth.repository.UserRepository
-import org.jellyfin.androidtv.databinding.ActivityMainBinding
-import org.jellyfin.androidtv.integration.LeanbackChannelWorker
 import org.jellyfin.androidtv.ui.ScreensaverViewModel
 import org.jellyfin.androidtv.ui.background.AppBackground
+import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.navigation.NavigationAction
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.screensaver.InAppScreensaver
 import org.jellyfin.androidtv.ui.startup.StartupActivity
+import org.jellyfin.androidtv.ui.startup.fragment.SplashScreen
 import org.jellyfin.androidtv.util.applyTheme
 import org.jellyfin.androidtv.util.isMediaSessionKeyEvent
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.compose.koinInject
 import timber.log.Timber
+
+@Composable
+@Stable
+private fun NavigationBackHandler() {
+	val navigationRepository = koinInject<NavigationRepository>()
+	var backHandlerEnabled by remember { mutableStateOf(navigationRepository.canGoBack) }
+
+	LaunchedEffect(navigationRepository) {
+		navigationRepository.currentAction.onEach {
+			backHandlerEnabled = navigationRepository.canGoBack
+		}.launchIn(this)
+	}
+
+	BackHandler(backHandlerEnabled) {
+		if (navigationRepository.canGoBack) {
+			navigationRepository.goBack()
+		}
+	}
+}
+
+@Composable
+@Stable
+private fun NavigationContent() {
+	val navigationRepository = koinInject<NavigationRepository>()
+	val statefulDestination by remember {
+		navigationRepository.currentAction
+			.filterIsInstance<NavigationAction.NavigateFragment>()
+			.map { it.destination }
+			.distinctUntilChanged()
+			.map { it to FragmentState() }
+	}.collectAsState(null)
+
+	Text(statefulDestination.toString(), color = Color.Red)
+
+	statefulDestination?.let { (destination, state) ->
+		key(destination) {
+			AndroidFragment(
+				clazz = destination.fragment.java,
+				arguments = destination.arguments,
+				fragmentState = state,
+			)
+		}
+	}
+}
 
 class MainActivity : FragmentActivity() {
 	private val navigationRepository by inject<NavigationRepository>()
 	private val sessionRepository by inject<SessionRepository>()
 	private val userRepository by inject<UserRepository>()
 	private val screensaverViewModel by viewModel<ScreensaverViewModel>()
-	private val workManager by inject<WorkManager>()
-
-	private lateinit var binding: ActivityMainBinding
-
-	private val backPressedCallback = object : OnBackPressedCallback(false) {
-		override fun handleOnBackPressed() {
-			if (navigationRepository.canGoBack) navigationRepository.goBack()
-		}
+	private val sessionActive = combine(
+		sessionRepository.currentSession,
+		userRepository.currentUser
+	) { session, user ->
+		session != null && user != null
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		applyTheme()
-
 		super.onCreate(savedInstanceState)
 
-		if (!validateAuthentication()) return
-
+		// Screen lock for custom screensaver
 		screensaverViewModel.keepScreenOn.flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
 			.onEach { keepScreenOn ->
 				if (keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 				else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 			}.launchIn(lifecycleScope)
 
-		onBackPressedDispatcher.addCallback(this, backPressedCallback)
-		if (savedInstanceState == null && navigationRepository.canGoBack) navigationRepository.reset(clearHistory = true)
+		// Navigation reset on app relaunch
+		if (savedInstanceState == null && navigationRepository.canGoBack) navigationRepository.reset()
 
-		navigationRepository.currentAction
-			.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-			.onEach { action ->
-				handleNavigationAction(action)
-				backPressedCallback.isEnabled = navigationRepository.canGoBack
-				screensaverViewModel.notifyInteraction(false)
-			}.launchIn(lifecycleScope)
+		setContent {
+			NavigationBackHandler()
 
-		binding = ActivityMainBinding.inflate(layoutInflater)
-		binding.background.setContent { AppBackground() }
-		binding.screensaver.setContent { InAppScreensaver() }
-		setContentView(binding.root)
+			// App content
+			Box {
+				AppBackground()
+
+				val sessionActive by sessionActive.collectAsState(false)
+				if (sessionActive) {
+					NavigationContent()
+					InAppScreensaver()
+				} else {
+					SplashScreen()
+				}
+			}
+		}
 	}
 
 	override fun onResume() {
 		super.onResume()
 
-		if (!validateAuthentication()) return
-
 		applyTheme()
 
-		screensaverViewModel.activityPaused = false
-	}
-
-	private fun validateAuthentication(): Boolean {
 		if (sessionRepository.currentSession.value == null || userRepository.currentUser.value == null) {
 			Timber.w("Activity ${this::class.qualifiedName} started without a session, bouncing to StartupActivity")
 			startActivity(Intent(this, StartupActivity::class.java))
 			finish()
-			return false
 		}
 
-		return true
-	}
-
-	override fun onPause() {
-		super.onPause()
-
-		screensaverViewModel.activityPaused = true
-	}
-
-	override fun onStop() {
-		super.onStop()
-
-		workManager.enqueue(OneTimeWorkRequestBuilder<LeanbackChannelWorker>().build())
-
-		lifecycleScope.launch(Dispatchers.IO) {
-			Timber.d("MainActivity stopped")
-			sessionRepository.restoreSession(destroyOnly = true)
-		}
-	}
-
-	private fun handleNavigationAction(action: NavigationAction) {
-		screensaverViewModel.notifyInteraction(true)
-
-		when (action) {
-			is NavigationAction.NavigateFragment -> binding.contentView.navigate(action)
-			NavigationAction.GoBack -> binding.contentView.goBack()
-
-			NavigationAction.Nothing -> Unit
-		}
+		screensaverViewModel.activityPaused = false
 	}
 
 	// Forward key events to fragments
