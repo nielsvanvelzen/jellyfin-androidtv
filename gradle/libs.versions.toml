@@ -58,6 +58,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 # Android(x)
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "androidx-cardview" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose-foundation" }
@@ -129,6 +130,7 @@ acra = [
     "acra-toast",
 ]
 androidx-compose = [
+    "androidx-activity-compose",
     "androidx-compose-foundation",
     "androidx-compose-ui-tooling",
 ]
