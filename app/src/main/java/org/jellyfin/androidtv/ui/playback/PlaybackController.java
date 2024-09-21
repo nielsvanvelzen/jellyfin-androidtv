@@ -636,7 +636,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
         if (mFragment != null) mFragment.updateDisplay();
 
         if (mVideoManager != null) {
-            mVideoManager.setVideoPath(response.getMediaUrl());
+            mVideoManager.setMediaStreamInfo(api.getValue(), response);
         }
 
         //wait a beat before attempting to start so the player surface is fully initialized and video is ready
@@ -788,16 +788,13 @@ public class PlaybackController implements PlaybackControllerNotifiable {
         // when burnt-in subtitles are selected, mCurrentOptions SubtitleStreamIndex is set in startItem() as soon as playback starts
         // otherwise mCurrentOptions SubtitleStreamIndex is kept null until now so we knew subtitles needed to be enabled but weren't already
 
-        if (streamInfo.getDeliveryMethod() == SubtitleDeliveryMethod.Embed) {
-            if (!mVideoManager.setExoPlayerTrack(index, MediaStreamType.SUBTITLE, getCurrentlyPlayingItem().getMediaStreams())) {
-                    // error selecting internal subs
-                    if (mFragment != null)
-                        Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
-                } else {
-                    mCurrentOptions.setSubtitleStreamIndex(index);
-                    mDefaultSubIndex = index;
-
-            }
+        if (!mVideoManager.setExoPlayerTrack(index, MediaStreamType.SUBTITLE, getCurrentlyPlayingItem().getMediaStreams())) {
+            // error selecting internal subs
+            if (mFragment != null)
+                Utils.showToast(mFragment.getContext(), mFragment.getString(R.string.msg_unable_load_subs));
+        } else {
+            mCurrentOptions.setSubtitleStreamIndex(index);
+            mDefaultSubIndex = index;
         }
     }
 
@@ -956,7 +953,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
                 public void onResponse(StreamInfo response) {
                     mCurrentStreamInfo = response;
                     if (mVideoManager != null) {
-                        mVideoManager.setVideoPath(response.getMediaUrl());
+                        mVideoManager.setMediaStreamInfo(api.getValue(), response);
                         mVideoManager.start();
                     }
                 }

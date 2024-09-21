@@ -219,6 +219,7 @@ class ExoPlayerProfile(
 			).forEach { codec ->
 				add(subtitleProfile(codec, SubtitleDeliveryMethod.Embed))
 				add(subtitleProfile(codec, SubtitleDeliveryMethod.Hls))
+				add(subtitleProfile(codec, SubtitleDeliveryMethod.External))
 			}
 
 			// Require baking
