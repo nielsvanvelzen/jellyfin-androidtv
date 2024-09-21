@@ -96,7 +96,6 @@ public class GetPlaybackInfoResponse extends Response<PlaybackInfoResponse> {
         streamInfo.setItemId(options.getItemId());
         streamInfo.setDeviceProfile(options.getProfile());
         streamInfo.setPlaySessionId(playbackInfo.getPlaySessionId());
-        streamInfo.setStartPositionTicks(startPositionTicks);
 
         if (options.getEnableDirectPlay() && mediaSourceInfo.getSupportsDirectPlay()){
             if (canDirectPlay(mediaSourceInfo)) {
