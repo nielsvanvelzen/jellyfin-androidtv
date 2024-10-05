@@ -17,6 +17,7 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.MediaSegmentDto
 import org.jellyfin.sdk.model.api.MediaStreamType
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
+import org.jellyfin.sdk.model.extensions.ticks
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 import java.util.UUID
@@ -146,6 +147,8 @@ fun PlaybackController.applyMediaSegments(
 			when (action) {
 				MediaSegmentAction.SKIP -> addSkipAction(mediaSegment)
 				MediaSegmentAction.ASK_TO_SKIP -> addAskToSkipAction(mediaSegment)
+				MediaSegmentAction.MUTE -> addMuteAction(mediaSegment)
+
 				MediaSegmentAction.NOTHING -> Unit
 			}
 		}
@@ -179,6 +182,42 @@ private fun PlaybackController.addAskToSkipAction(mediaSegment: MediaSegmentDto)
 		}
 		// Segments at position 0 will never be hit by ExoPlayer so we need to add a minimum value
 		.setPosition(mediaSegment.start.inWholeMilliseconds.coerceAtLeast(1))
+		.setDeleteAfterDelivery(false)
+		.send()
+}
+
+@OptIn(UnstableApi::class)
+private fun PlaybackController.addMuteAction(mediaSegment: MediaSegmentDto) {
+	// TODO: This action does not currently restore the volume if manually seeked over it
+	// as exoplayer only triggers a message event when the seekhead goes over its position naturally
+	// TODO: The action also does not enable the mute state when manually seeking into it
+	if (mediaSegment.endTicks <= mediaSegment.startTicks) return
+
+	var previousVolume: Float? = null
+
+	mVideoManager.mExoPlayer
+		.createMessage { messageType: Int, payload: Any? ->
+			fragment.lifecycleScope.launch(Dispatchers.Main) {
+				previousVolume = mVideoManager.mExoPlayer.volume
+				mVideoManager.mExoPlayer.volume = 0f
+			}
+		}
+		.setPosition(mediaSegment.startTicks.ticks.inWholeMilliseconds.coerceAtLeast(1))
+		.setDeleteAfterDelivery(false)
+		.send()
+
+	mVideoManager.mExoPlayer
+		.createMessage { messageType: Int, payload: Any? ->
+			// Only restore if the volume is still muted and previousVolume is still set
+			fragment.lifecycleScope.launch(Dispatchers.Main) {
+				if (mVideoManager.mExoPlayer.volume == 0f) {
+					previousVolume?.let {
+						mVideoManager.mExoPlayer.volume = it
+					}
+				}
+			}
+		}
+		.setPosition(mediaSegment.endTicks.ticks.inWholeMilliseconds)
 		.setDeleteAfterDelivery(false)
 		.send()
 }

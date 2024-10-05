@@ -22,4 +22,13 @@ enum class MediaSegmentAction(
 	 * segments with a duration of at least 3 seconds to avoid UI flickering.
 	 */
 	ASK_TO_SKIP(R.string.segment_action_ask_to_skip),
+
+	/**
+	 * Mute the audio volume until the end of this segment. The volume level should be restored to the state when this segment started. If
+	 * the volume is manually changed by the user during this segment it should no longer restore volume itself. The mute action will always
+	 * execute when the segment block is active.
+	 *
+	 * @todo Not fully implemented.
+	 */
+	MUTE(R.string.segment_action_mute),
 }
