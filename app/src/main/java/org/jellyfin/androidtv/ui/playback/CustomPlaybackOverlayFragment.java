@@ -86,7 +86,7 @@ import kotlin.Lazy;
 import timber.log.Timber;
 
 public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGuide, View.OnKeyListener {
-    private VlcPlayerInterfaceBinding binding;
+    protected VlcPlayerInterfaceBinding binding;
     private OverlayTvGuideBinding tvGuideBinding;
 
     private RowsSupportFragment mPopupRowsFragment;
@@ -475,6 +475,21 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
                     leanbackOverlayFragment.hideOverlay();
                 }
 
+                if (binding.skipOverlay.getVisible()) {
+                    // Hide without doing anything
+                    if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_BUTTON_B || keyCode == KeyEvent.KEYCODE_ESCAPE) {
+                        binding.skipOverlay.hide();
+                        return true;
+                    }
+
+                    // Hide with seek
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+                        playbackControllerContainer.getValue().getPlaybackController().seek(binding.skipOverlay.getTargetPositionMs());
+                        binding.skipOverlay.hide();
+                        return true;
+                    }
+                }
+
                 if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP) {
                     closePlayer();
                     return true;
@@ -691,6 +706,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     }
 
     public void show() {
+        binding.skipOverlay.hide();
         binding.topPanel.startAnimation(slideDown);
         mIsVisible = true;
     }
@@ -712,6 +728,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     }
 
     public void showGuide() {
+        binding.skipOverlay.hide();
         hide();
         leanbackOverlayFragment.setShouldShowOverlay(false);
         leanbackOverlayFragment.hideOverlay();
@@ -1084,6 +1101,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     private Animation.AnimationListener showAnimationListener = new Animation.AnimationListener() {
         @Override
         public void onAnimationStart(Animation animation) {
+            binding.skipOverlay.hide();
         }
 
         @Override
@@ -1097,6 +1115,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     };
 
     public void showQuickChannelChanger() {
+        binding.skipOverlay.hide();
         showChapterPanel();
         mHandler.postDelayed(() -> {
             if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
@@ -1110,6 +1129,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     }
 
     public void showChapterSelector() {
+        binding.skipOverlay.hide();
         showChapterPanel();
         mHandler.postDelayed(() -> {
             if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
@@ -1181,6 +1201,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
     }
 
     public void setCurrentTime(long time) {
+        binding.skipOverlay.setCurrentPositionMs(time);
         if (leanbackOverlayFragment != null)
             leanbackOverlayFragment.updateCurrentPosition();
     }
