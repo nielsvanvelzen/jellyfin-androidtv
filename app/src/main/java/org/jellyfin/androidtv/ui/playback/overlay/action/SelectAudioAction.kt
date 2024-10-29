@@ -8,7 +8,6 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.playback.PlaybackController
 import org.jellyfin.androidtv.ui.playback.PlaybackManager
 import org.jellyfin.androidtv.ui.playback.overlay.CustomPlaybackTransportControlGlue
-import org.jellyfin.androidtv.ui.playback.overlay.LeanbackOverlayFragment
 import org.jellyfin.androidtv.ui.playback.overlay.VideoPlayerAdapter
 
 class SelectAudioAction(
@@ -27,8 +26,7 @@ class SelectAudioAction(
 		view: View,
 	) {
 		videoPlayerAdapter.leanbackOverlayFragment.setFading(false)
-		val audioTracks = playbackManager.getInPlaybackSelectableAudioStreams(playbackController.currentStreamInfo)
-			?: return
+		val audioTracks =playbackController.currentStreamInfo?.selectableAudioStreams ?: return
 		val currentAudioIndex = playbackController.audioStreamIndex
 
 		PopupMenu(context, view, Gravity.END).apply {

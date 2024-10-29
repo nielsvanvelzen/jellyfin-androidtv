@@ -29,7 +29,6 @@ import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.ReportingHelper;
 import org.jellyfin.androidtv.util.profile.ExoPlayerProfile;
 import org.jellyfin.androidtv.util.sdk.compat.JavaCompat;
-import org.jellyfin.apiclient.interaction.ApiClient;
 import org.jellyfin.apiclient.interaction.Response;
 import org.jellyfin.apiclient.model.dlna.DeviceProfile;
 import org.jellyfin.apiclient.model.dlna.SubtitleDeliveryMethod;
@@ -57,7 +56,6 @@ public class PlaybackController implements PlaybackControllerNotifiable {
     // Frequency to report paused state
     private static final long PROGRESS_REPORTING_PAUSE_INTERVAL = TimeUtils.secondsToMillis(15);
 
-    private Lazy<ApiClient> apiClient = inject(ApiClient.class);
     private Lazy<PlaybackManager> playbackManager = inject(PlaybackManager.class);
     private Lazy<UserPreferences> userPreferences = inject(UserPreferences.class);
     private Lazy<VideoQueueManager> videoQueueManager = inject(VideoQueueManager.class);
@@ -520,7 +518,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
             TvManager.setLastLiveTvChannel(item.getId());
             //internal/exo player
             Timber.i("Using internal player for Live TV");
-            playbackManager.getValue().getVideoStreamInfo(api.getValue().getDeviceInfo(), internalOptions, position * 10000, apiClient.getValue(), new Response<StreamInfo>() {
+            playbackManager.getValue().getVideoStreamInfo(mFragment, internalOptions, position * 10000, new Response<StreamInfo>() {
                 @Override
                 public void onResponse(StreamInfo response) {
                     if (mVideoManager == null)
@@ -535,7 +533,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
                 }
             });
         } else {
-            playbackManager.getValue().getVideoStreamInfo(api.getValue().getDeviceInfo(), internalOptions, position * 10000, apiClient.getValue(), new Response<StreamInfo>() {
+            playbackManager.getValue().getVideoStreamInfo(mFragment, internalOptions, position * 10000, new Response<StreamInfo>() {
                 @Override
                 public void onResponse(StreamInfo internalResponse) {
                     Timber.i("Internal player would %s", internalResponse.getPlayMethod().equals(PlayMethod.Transcode) ? "transcode" : "direct stream");
@@ -895,7 +893,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
             mVideoManager.stopPlayback();
             mPlaybackState = PlaybackState.BUFFERING;
 
-            playbackManager.getValue().changeVideoStream(mCurrentStreamInfo, api.getValue().getDeviceInfo(), mCurrentOptions, pos * 10000, apiClient.getValue(), new Response<StreamInfo>() {
+            playbackManager.getValue().changeVideoStream(mFragment, mCurrentStreamInfo, mCurrentOptions, pos * 10000, new Response<StreamInfo>() {
                 @Override
                 public void onResponse(StreamInfo response) {
                     mCurrentStreamInfo = response;

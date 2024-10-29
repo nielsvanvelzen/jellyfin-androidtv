@@ -1,6 +1,5 @@
 package org.jellyfin.androidtv.ui.playback;
 
-import static org.koin.java.KoinJavaComponent.get;
 import static org.koin.java.KoinJavaComponent.inject;
 
 import android.app.Activity;
@@ -281,7 +280,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
         options.setProfile(new ExternalPlayerProfile());
 
         // Get playback info for each player and then decide on which one to use
-        KoinJavaComponent.<PlaybackManager>get(PlaybackManager.class).getVideoStreamInfo(api.getValue().getDeviceInfo(), options, JavaCompat.getResumePositionTicks(item), get(org.jellyfin.apiclient.interaction.ApiClient.class), new Response<StreamInfo>() {
+        KoinJavaComponent.<PlaybackManager>get(PlaybackManager.class).getVideoStreamInfo(this, options, JavaCompat.getResumePositionTicks(item), new Response<StreamInfo>() {
             @Override
             public void onResponse(StreamInfo response) {
                 mCurrentStreamInfo = response;
