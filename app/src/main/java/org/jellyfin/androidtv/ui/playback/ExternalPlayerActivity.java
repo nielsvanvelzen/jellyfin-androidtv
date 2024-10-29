@@ -1,6 +1,5 @@
 package org.jellyfin.androidtv.ui.playback;
 
-import static org.koin.java.KoinJavaComponent.get;
 import static org.koin.java.KoinJavaComponent.inject;
 
 import android.app.Activity;
@@ -281,7 +280,7 @@ public class ExternalPlayerActivity extends FragmentActivity {
         options.setProfile(new ExternalPlayerProfile());
 
         // Get playback info for each player and then decide on which one to use
-        KoinJavaComponent.<PlaybackManager>get(PlaybackManager.class).getVideoStreamInfo(api.getValue().getDeviceInfo(), options, JavaCompat.getResumePositionTicks(item), get(org.jellyfin.apiclient.interaction.ApiClient.class), new Response<StreamInfo>() {
+        KoinJavaComponent.<PlaybackManager>get(PlaybackManager.class).getVideoStreamInfo(this, options, JavaCompat.getResumePositionTicks(item), new Response<StreamInfo>() {
             @Override
             public void onResponse(StreamInfo response) {
                 mCurrentStreamInfo = response;
@@ -300,13 +299,13 @@ public class ExternalPlayerActivity extends FragmentActivity {
                 if (exception instanceof PlaybackException) {
                     PlaybackException ex = (PlaybackException) exception;
                     switch (ex.getErrorCode()) {
-                        case NotAllowed:
+                        case NOT_ALLOWED:
                             Utils.showToast(ExternalPlayerActivity.this, getString(R.string.msg_playback_not_allowed));
                             break;
-                        case NoCompatibleStream:
+                        case NO_COMPATIBLE_STREAM:
                             Utils.showToast(ExternalPlayerActivity.this, getString(R.string.msg_playback_incompatible));
                             break;
-                        case RateLimitExceeded:
+                        case RATE_LIMIT_EXCEEDED:
                             Utils.showToast(ExternalPlayerActivity.this, getString(R.string.msg_playback_restricted));
                             break;
                     }

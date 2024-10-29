@@ -28,8 +28,7 @@ class SelectAudioAction(
 		view: View,
 	) {
 		videoPlayerAdapter.leanbackOverlayFragment.setFading(false)
-		val audioTracks = playbackManager.getInPlaybackSelectableAudioStreams(playbackController.currentStreamInfo)
-			?: return
+		val audioTracks =playbackController.currentStreamInfo?.selectableAudioStreams ?: return
 		val currentAudioIndex = playbackController.audioStreamIndex
 
 		dismissPopup()

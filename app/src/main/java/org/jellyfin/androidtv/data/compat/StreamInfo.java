@@ -1,7 +1,6 @@
 package org.jellyfin.androidtv.data.compat;
 
 import org.jellyfin.apiclient.model.dlna.DeviceProfile;
-import org.jellyfin.apiclient.model.dlna.EncodingContext;
 import org.jellyfin.apiclient.model.dlna.SubtitleProfile;
 import org.jellyfin.apiclient.model.dlna.TranscodeSeekInfo;
 import org.jellyfin.apiclient.model.session.PlayMethod;
@@ -44,16 +43,6 @@ public class StreamInfo {
 
     public final void setPlayMethod(PlayMethod value) {
         playMethod = value;
-    }
-
-    private EncodingContext Context = EncodingContext.values()[0];
-
-    public final EncodingContext getContext() {
-        return Context;
-    }
-
-    public final void setContext(EncodingContext value) {
-        Context = value;
     }
 
     private String Container;
