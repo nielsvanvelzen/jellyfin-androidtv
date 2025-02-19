@@ -57,3 +57,28 @@ fun MarkdownBuilder.appendCodeBlock(language: String, code: String?) {
 fun MarkdownBuilder.appendValue(value: String?) {
 	append("`", value ?: "<null>", "`")
 }
+
+fun MarkdownBuilder.appendTable(
+	rows: Collection<Collection<String>>
+) {
+	val widths = mutableListOf<Int>()
+	for (row in rows) {
+		for ((index, value) in row.withIndex()) {
+			if (index >= widths.size) widths.add(value.length)
+			else widths[index] = maxOf(widths[index], value.length)
+		}
+	}
+
+	for (row in rows) {
+		appendTableRow(widths.size) { index ->
+			val value = row.elementAtOrElse(index) { "" }
+			value.padEnd(widths[index], if (value == "---") '-' else ' ')
+		}
+	}
+}
+
+fun MarkdownBuilder.appendTableRow(values: Collection<String>) {
+	appendLine(values.joinToString(separator = " | ", prefix = "| ", postfix = " |"))
+}
+
+fun MarkdownBuilder.appendTableRow(size: Int, init: (index: Int) -> String = { "---" }) = appendTableRow(List(size, init))
