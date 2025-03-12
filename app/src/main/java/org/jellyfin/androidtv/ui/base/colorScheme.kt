@@ -21,6 +21,7 @@ fun colorScheme(): ColorScheme = ColorScheme(
 	onInputFocused = Color(0xFFDDDDDD),
 	recording = Color(0xB3FF7474),
 	onRecording = Color(0xFFDDDDDD),
+	badge = Color(0xFF62676F),
 )
 
 @Immutable
@@ -44,6 +45,8 @@ data class ColorScheme(
 
 	val recording: Color,
 	val onRecording: Color,
+
+	val badge: Color,
 )
 
 val LocalColorScheme = staticCompositionLocalOf { colorScheme() }
