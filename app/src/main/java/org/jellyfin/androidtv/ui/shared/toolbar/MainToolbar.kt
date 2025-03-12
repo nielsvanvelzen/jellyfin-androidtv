@@ -49,6 +49,7 @@ enum class MainToolbarActiveButton {
 	User,
 	Home,
 	Search,
+	Settings,
 
 	None,
 }
