@@ -13,6 +13,7 @@ fun colorScheme(): ColorScheme = ColorScheme(
 	onButtonFocused = Color(0xFF444444),
 	buttonDisabled = Color(0x33747474),
 	onButtonDisabled = Color(0xFF686868),
+	badge = Color(0xFF62676F),
 )
 
 @Immutable
@@ -26,6 +27,8 @@ data class ColorScheme(
 	val onButtonFocused: Color,
 	val buttonDisabled: Color,
 	val onButtonDisabled: Color,
+
+	val badge: Color,
 )
 
 val LocalColorScheme = staticCompositionLocalOf { colorScheme() }
