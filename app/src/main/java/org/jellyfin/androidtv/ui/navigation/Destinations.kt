@@ -1,7 +1,6 @@
 package org.jellyfin.androidtv.ui.navigation
 
 import androidx.core.os.bundleOf
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.ui.browsing.BrowseGridFragment
@@ -31,6 +30,7 @@ import org.jellyfin.androidtv.ui.preference.PreferencesActivity
 import org.jellyfin.androidtv.ui.preference.dsl.OptionsFragment
 import org.jellyfin.androidtv.ui.preference.screen.UserPreferencesScreen
 import org.jellyfin.androidtv.ui.search.SearchFragment
+import org.jellyfin.androidtv.ui.settings.SettingsFragment
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.SeriesTimerInfoDto
@@ -54,6 +54,7 @@ object Destinations {
 		SearchFragment.EXTRA_QUERY to query,
 	)
 	val userPreferences = preferenceDestination<UserPreferencesScreen>()
+	val settings = fragmentDestination<SettingsFragment>()
 
 	// Browsing
 	// TODO only pass item id instead of complete JSON to browsing destinations

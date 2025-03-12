@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.semantics.Role
@@ -37,7 +38,7 @@ fun ButtonBase(
 	val focused by interactionSource.collectIsFocusedAsState()
 	val pressed by interactionSource.collectIsPressedAsState()
 
-	val containerColor = colorResource(R.color.button_default_normal_background)
+	val containerColor = Color.Transparent// colorResource(R.color.button_default_normal_background)
 	val contentColor = colorResource(R.color.button_default_normal_text)
 	val focusedContainerColor = colorResource(R.color.button_default_highlight_background)
 	val focusedContentColor = colorResource(R.color.button_default_highlight_text)
