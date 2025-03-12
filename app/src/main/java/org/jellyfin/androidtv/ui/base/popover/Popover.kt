@@ -39,7 +39,7 @@ fun Popover(
 	alignment: Alignment = Alignment.TopStart,
 	offset: DpOffset = DpOffset.Zero,
 	shape: Shape = PopoverDefaults.Shape,
-	backgroundColor: Color = JellyfinTheme.colorScheme.popover,
+	backgroundColor: Color = JellyfinTheme.colorScheme.card,
 	content: @Composable BoxScope.() -> Unit,
 ) {
 	val density = LocalDensity.current

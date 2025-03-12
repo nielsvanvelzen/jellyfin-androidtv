@@ -21,9 +21,14 @@ fun colorScheme(): ColorScheme = ColorScheme(
 	onInputFocused = Color(0xFFDDDDDD),
 	recording = Color(0xB3FF7474),
 	onRecording = Color(0xFFDDDDDD),
-	popover = Color(0xFF212225),
 	badge = Color(0xFF62676F),
 	onBadge = Color(0xFFE8EAED),
+	listHeader = Color(0xFFE0E0E0),
+	listOverline = Color(0x66FFFFFF),
+	listHeadline = Color(0xFFFFFFFF),
+	listCaption = Color(0x99FFFFFF),
+	card = Color(0xFF212225),
+	cardVariant = Color(0xFF2A2C2E),
 )
 
 @Immutable
@@ -48,10 +53,16 @@ data class ColorScheme(
 	val recording: Color,
 	val onRecording: Color,
 
-	val popover: Color,
-
 	val badge: Color,
 	val onBadge: Color,
+
+	val listHeader: Color,
+	val listOverline: Color,
+	val listHeadline: Color,
+	val listCaption: Color,
+
+	val card: Color,
+	val cardVariant: Color,
 )
 
 val LocalColorScheme = staticCompositionLocalOf { colorScheme() }
