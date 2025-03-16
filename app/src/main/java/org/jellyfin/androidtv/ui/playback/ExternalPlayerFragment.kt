@@ -1,18 +1,21 @@
 package org.jellyfin.androidtv.ui.playback
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
-import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.model.DataRefreshService
+import org.jellyfin.androidtv.ui.navigation.Destinations
+import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.util.sdk.getDisplayName
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.playStateApi
@@ -36,10 +39,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Activity that, once opened, opens the first item of the [VideoQueueManager.getCurrentVideoQueue] list in an external media player app.
+ * Fragment that opens the first item of the [VideoQueueManager.getCurrentVideoQueue] list in an external media player app.
  * Once returned it will notify the server of item completion.
  */
-class ExternalPlayerActivity : FragmentActivity() {
+class ExternalPlayerFragment : Fragment() {
 	companion object {
 		const val EXTRA_POSITION = "position"
 
@@ -67,6 +70,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 		private val resultPositionExtras = arrayOf(API_MX_RESULT_POSITION, API_VLC_RESULT_POSITION)
 	}
 
+	private val navigationRepository by inject<NavigationRepository>()
 	private val videoQueueManager by inject<VideoQueueManager>()
 	private val dataRefreshService by inject<DataRefreshService>()
 	private val api by inject<ApiClient>()
@@ -75,8 +79,8 @@ class ExternalPlayerActivity : FragmentActivity() {
 		Timber.i("Playback finished with result code ${result.resultCode}")
 		videoQueueManager.setCurrentMediaPosition(videoQueueManager.getCurrentMediaPosition() + 1)
 
-		if (result.resultCode != RESULT_OK) {
-			Toast.makeText(this, R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
+		if (result.resultCode != Activity.RESULT_OK) {
+			Toast.makeText(requireContext(), R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
 			finish()
 		} else {
 			onItemFinished(result.data)
@@ -85,10 +89,10 @@ class ExternalPlayerActivity : FragmentActivity() {
 
 	private var currentItem: Pair<BaseItemDto, MediaSourceInfo>? = null
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
+	override fun onResume() {
+		super.onResume()
 
-		val position = intent.getLongExtra(EXTRA_POSITION, 0).milliseconds
+		val position = requireArguments().getLong(EXTRA_POSITION, 0).milliseconds
 		playNext(position)
 	}
 
@@ -98,7 +102,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 		val mediaSource = item.mediaSources?.firstOrNull { it.id?.toUUIDOrNull() == item.id }
 
 		if (mediaSource == null) {
-			Toast.makeText(this, R.string.msg_no_playable_items, Toast.LENGTH_LONG).show()
+			Toast.makeText(requireContext(), R.string.msg_no_playable_items, Toast.LENGTH_LONG).show()
 			finish()
 		} else {
 			playItem(item, mediaSource, position)
@@ -112,7 +116,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 			static = true,
 		)
 
-		val title = item.getDisplayName(this)
+		val title = item.getDisplayName(requireContext())
 		val fileName = mediaSource.path?.let { File(it).name }
 		val externalSubtitles = mediaSource.mediaStreams
 			?.filter { it.type == MediaStreamType.SUBTITLE && it.isExternal }
@@ -165,7 +169,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 			currentItem = item to mediaSource
 			playVideoLauncher.launch(playIntent)
 		} catch (_: ActivityNotFoundException) {
-			Toast.makeText(this, R.string.no_player_message, Toast.LENGTH_LONG).show()
+			Toast.makeText(requireContext(), R.string.no_player_message, Toast.LENGTH_LONG).show()
 			finish()
 		}
 	}
@@ -173,7 +177,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 
 	private fun onItemFinished(result: Intent?) {
 		if (currentItem == null) {
-			Toast.makeText(this@ExternalPlayerActivity, R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
+			Toast.makeText(requireContext(), R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
 			finish()
 			return
 		}
@@ -204,7 +208,7 @@ class ExternalPlayerActivity : FragmentActivity() {
 				}
 			}.onFailure { error ->
 				Timber.w(error, "Failed to report playback stop event")
-				Toast.makeText(this@ExternalPlayerActivity, R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
+				Toast.makeText(requireContext(), R.string.video_error_unknown_error, Toast.LENGTH_LONG).show()
 			}
 
 			dataRefreshService.lastPlayback = Instant.now()
@@ -217,5 +221,10 @@ class ExternalPlayerActivity : FragmentActivity() {
 			if (shouldPlayNext) playNext()
 			else finish()
 		}
+	}
+
+	private fun finish() {
+		if (navigationRepository.canGoBack) navigationRepository.goBack()
+		else navigationRepository.reset(Destinations.home)
 	}
 }

@@ -1,7 +1,6 @@
 package org.jellyfin.androidtv.ui.navigation
 
 import androidx.core.os.bundleOf
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.ui.browsing.BrowseGridFragment
@@ -24,7 +23,7 @@ import org.jellyfin.androidtv.ui.livetv.LiveTvGuideFragment
 import org.jellyfin.androidtv.ui.picture.PictureViewerFragment
 import org.jellyfin.androidtv.ui.playback.AudioNowPlayingFragment
 import org.jellyfin.androidtv.ui.playback.CustomPlaybackOverlayFragment
-import org.jellyfin.androidtv.ui.playback.ExternalPlayerActivity
+import org.jellyfin.androidtv.ui.playback.ExternalPlayerFragment
 import org.jellyfin.androidtv.ui.playback.nextup.NextUpFragment
 import org.jellyfin.androidtv.ui.playback.rewrite.PlaybackRewriteFragment
 import org.jellyfin.androidtv.ui.preference.PreferencesActivity
@@ -156,8 +155,8 @@ object Destinations {
 			PictureViewerFragment.ARGUMENT_AUTO_PLAY to autoPlay,
 		)
 
-	fun externalPlayer(position: Duration = Duration.ZERO) = activityDestination<ExternalPlayerActivity>(
-		ExternalPlayerActivity.EXTRA_POSITION to position.inWholeMilliseconds
+	fun externalPlayer(position: Duration = Duration.ZERO) = fragmentDestination<ExternalPlayerFragment>(
+		ExternalPlayerFragment.EXTRA_POSITION to position.inWholeMilliseconds
 	)
 
 	fun videoPlayer(position: Int?) = fragmentDestination<CustomPlaybackOverlayFragment>(
