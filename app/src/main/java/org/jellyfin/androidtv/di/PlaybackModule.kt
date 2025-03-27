@@ -8,7 +8,6 @@ import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
-import okhttp3.OkHttpClient
 import org.jellyfin.androidtv.BuildConfig
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.preference.UserPreferences
@@ -26,13 +25,12 @@ import org.jellyfin.playback.media3.exoplayer.ExoPlayerOptions
 import org.jellyfin.playback.media3.exoplayer.exoPlayerPlugin
 import org.jellyfin.playback.media3.session.MediaSessionOptions
 import org.jellyfin.playback.media3.session.media3SessionPlugin
-import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.HttpClientOptions
+import org.jellyfin.sdk.api.okhttp.OkHttpFactory
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.toJavaDuration
 import org.jellyfin.androidtv.ui.playback.PlaybackManager as LegacyPlaybackManager
 
 val playbackModule = module {
@@ -50,15 +48,10 @@ val playbackModule = module {
 
 	// OkHttp data source using OkHttpFactory from SDK
 	single<HttpDataSource.Factory> {
+		val okHttpFactory = get<OkHttpFactory>()
 		val httpClientOptions = get<HttpClientOptions>()
 
-		OkHttpDataSource.Factory(OkHttpClient.Builder().apply {
-			followRedirects(httpClientOptions.followRedirects)
-			connectTimeout(httpClientOptions.connectTimeout.toJavaDuration())
-			callTimeout(httpClientOptions.requestTimeout.toJavaDuration())
-			readTimeout(httpClientOptions.socketTimeout.toJavaDuration())
-			writeTimeout(httpClientOptions.socketTimeout.toJavaDuration())
-		}.build())
+		OkHttpDataSource.Factory(okHttpFactory.createClient(httpClientOptions))
 	}
 
 	single { createPlaybackManager() }
@@ -79,7 +72,6 @@ fun Scope.createPlaybackManager() = playbackManager(androidContext()) {
 	}
 
 	val userPreferences = get<UserPreferences>()
-	val api = get<ApiClient>()
 	val exoPlayerOptions = ExoPlayerOptions(
 		preferFfmpeg = userPreferences[UserPreferences.preferExoPlayerFfmpeg],
 		enableDebugLogging = userPreferences[UserPreferences.debuggingEnabled],
