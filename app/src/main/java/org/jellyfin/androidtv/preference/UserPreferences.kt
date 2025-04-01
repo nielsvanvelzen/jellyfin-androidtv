@@ -3,10 +3,10 @@ package org.jellyfin.androidtv.preference
 import android.content.Context
 import android.view.KeyEvent
 import androidx.preference.PreferenceManager
+import org.jellyfin.androidtv.preference.UserPreferences.Companion.screensaverInAppEnabled
 import org.jellyfin.androidtv.preference.constant.AppTheme
 import org.jellyfin.androidtv.preference.constant.AudioBehavior
 import org.jellyfin.androidtv.preference.constant.ClockBehavior
-import org.jellyfin.androidtv.preference.constant.LibassMode
 import org.jellyfin.androidtv.preference.constant.NextUpBehavior
 import org.jellyfin.androidtv.preference.constant.RatingType
 import org.jellyfin.androidtv.preference.constant.RefreshRateSwitchingBehavior
@@ -233,9 +233,9 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		var trickPlayEnabled = booleanPreference("trick_play_enabled", false)
 
 		/**
-		 * Enable libass.
+		 * Enable libass to render SSA and ASS formats.
 		 */
-		var libassMode = enumPreference<LibassMode>("libass_mode", LibassMode.DISABLED)
+		var libassEnabled = booleanPreference("libass_enabled", true)
 	}
 
 	init {

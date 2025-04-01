@@ -6,11 +6,9 @@ import org.jellyfin.androidtv.BuildConfig
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.preference.SystemPreferences
 import org.jellyfin.androidtv.preference.UserPreferences
-import org.jellyfin.androidtv.preference.constant.LibassMode
 import org.jellyfin.androidtv.ui.preference.dsl.OptionsFragment
 import org.jellyfin.androidtv.ui.preference.dsl.action
 import org.jellyfin.androidtv.ui.preference.dsl.checkbox
-import org.jellyfin.androidtv.ui.preference.dsl.enum
 import org.jellyfin.androidtv.ui.preference.dsl.optionsScreen
 import org.jellyfin.androidtv.util.isTvDevice
 import org.koin.android.ext.android.inject
@@ -50,10 +48,10 @@ class DeveloperPreferencesScreen : OptionsFragment() {
 					bind(userPreferences, UserPreferences.playbackRewriteVideoEnabled)
 				}
 
-				enum<LibassMode> {
-					title = "Libass subtitle mode"
+				checkbox {
+					title = "Enable libass"
 
-					bind(userPreferences, UserPreferences.libassMode)
+					bind(userPreferences, UserPreferences.libassEnabled)
 				}
 			}
 

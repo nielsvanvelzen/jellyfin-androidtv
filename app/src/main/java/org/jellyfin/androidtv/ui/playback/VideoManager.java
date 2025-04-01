@@ -45,7 +45,6 @@ import androidx.media3.ui.PlayerView;
 import org.jellyfin.androidtv.R;
 import org.jellyfin.androidtv.data.compat.StreamInfo;
 import org.jellyfin.androidtv.preference.UserPreferences;
-import org.jellyfin.androidtv.preference.constant.LibassMode;
 import org.jellyfin.androidtv.preference.constant.ZoomMode;
 import org.jellyfin.sdk.api.client.ApiClient;
 import org.jellyfin.sdk.model.api.MediaStream;
@@ -61,6 +60,7 @@ import java.util.Optional;
 import io.github.peerless2012.ass.media.AssHandler;
 import io.github.peerless2012.ass.media.kt.AssPlayerKt;
 import io.github.peerless2012.ass.media.parser.AssSubtitleParserFactory;
+import io.github.peerless2012.ass.media.type.AssRenderType;
 import timber.log.Timber;
 
 @OptIn(markerClass = UnstableApi.class)
@@ -90,9 +90,10 @@ public class VideoManager {
         _helper = helper;
         nightModeEnabled = userPreferences.get(UserPreferences.Companion.getAudioNightMode());
 
-        LibassMode libassMode = userPreferences.get(UserPreferences.Companion.getLibassMode());
-        if (libassMode != LibassMode.DISABLED) {
-            AssHandler assHandler = new AssHandler(libassMode.getRenderType());
+        boolean libassEnabled = userPreferences.get(UserPreferences.Companion.getLibassEnabled());
+        if (libassEnabled) {
+            // TODO: Use LEGACY for Nvidia Shield, OPENGL otherwise
+            AssHandler assHandler = new AssHandler(AssRenderType.LEGACY);
             mExoPlayer = configureExoplayerBuilder(activity, assHandler).build();
             assHandler.init(mExoPlayer);
         } else {

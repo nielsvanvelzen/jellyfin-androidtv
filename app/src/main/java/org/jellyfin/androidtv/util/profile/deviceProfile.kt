@@ -4,7 +4,6 @@ import androidx.media3.common.MimeTypes
 import org.jellyfin.androidtv.constant.Codec
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.AudioBehavior
-import org.jellyfin.androidtv.preference.constant.LibassMode
 import org.jellyfin.sdk.model.api.CodecType
 import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.EncodingContext
@@ -57,7 +56,7 @@ fun createDeviceProfile(userPreferences: UserPreferences, disableDirectPlay: Boo
 	disableDirectPlay = disableDirectPlay,
 	isAC3Enabled = userPreferences[UserPreferences.ac3Enabled],
 	downMixAudio = userPreferences[UserPreferences.audioBehaviour] == AudioBehavior.DOWNMIX_TO_STEREO,
-	assDirectPlay = userPreferences[UserPreferences.libassMode] != LibassMode.DISABLED,
+	assDirectPlay = userPreferences[UserPreferences.libassEnabled],
 )
 
 fun createDeviceProfile(
