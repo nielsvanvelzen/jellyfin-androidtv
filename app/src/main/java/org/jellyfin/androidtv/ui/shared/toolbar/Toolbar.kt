@@ -1,20 +1,20 @@
 package org.jellyfin.androidtv.ui.shared.toolbar
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
-import org.jellyfin.androidtv.ui.base.modifier.childFocusRestorer
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.composable.rememberCurrentTime
 
@@ -46,11 +45,8 @@ fun Toolbar(
 			.fillMaxWidth()
 			.height(95.dp)
 			.overscan(),
+		horizontalArrangement = Arrangement.spacedBy(24.dp)
 	) {
-		Logo()
-
-		Spacer(Modifier.width(24.dp))
-
 		Box(
 			modifier = Modifier
 				.fillMaxHeight()
@@ -58,7 +54,6 @@ fun Toolbar(
 		) {
 			content()
 		}
-		Spacer(Modifier.width(24.dp))
 
 		val currentTime by rememberCurrentTime()
 		Text(
@@ -72,11 +67,13 @@ fun Toolbar(
 
 @Composable
 fun BoxScope.ToolbarButtons(
+	modifier: Modifier = Modifier,
 	content: @Composable RowScope.() -> Unit,
 ) {
 	Row(
-		modifier = Modifier
-			.childFocusRestorer()
+		modifier = modifier
+			.focusRestorer()
+			.focusGroup()
 			.align(Alignment.CenterEnd),
 		horizontalArrangement = Arrangement.spacedBy(8.dp),
 	) {

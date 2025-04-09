@@ -1,8 +1,12 @@
 package org.jellyfin.androidtv.ui.shared.toolbar
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.button.IconButton
@@ -13,6 +17,9 @@ fun StartupToolbar(
 	openSettings: () -> Unit,
 ) {
 	Toolbar {
+		Logo()
+		Spacer(Modifier.width(24.dp))
+
 		ToolbarButtons {
 			IconButton(onClick = openHelp) {
 				Icon(
