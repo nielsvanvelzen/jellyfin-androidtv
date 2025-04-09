@@ -39,6 +39,7 @@ import org.jellyfin.androidtv.ui.playback.nextup.NextUpViewModel
 import org.jellyfin.androidtv.ui.playback.segment.MediaSegmentRepository
 import org.jellyfin.androidtv.ui.playback.segment.MediaSegmentRepositoryImpl
 import org.jellyfin.androidtv.ui.playback.stillwatching.StillWatchingViewModel
+import org.jellyfin.androidtv.ui.quickswitch.QuickSwitchViewModel
 import org.jellyfin.androidtv.ui.search.SearchFragmentDelegate
 import org.jellyfin.androidtv.ui.search.SearchRepository
 import org.jellyfin.androidtv.ui.search.SearchRepositoryImpl
@@ -148,6 +149,7 @@ val appModule = module {
 	viewModel { PictureViewerViewModel(get()) }
 	viewModel { SearchViewModel(get()) }
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
+	viewModel { QuickSwitchViewModel(get(), get(), get(), get(), get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
 
