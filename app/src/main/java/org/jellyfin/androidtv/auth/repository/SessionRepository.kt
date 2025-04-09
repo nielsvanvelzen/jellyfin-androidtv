@@ -43,6 +43,7 @@ interface SessionRepository {
 	val state: StateFlow<SessionRepositoryState>
 
 	suspend fun restoreSession(destroyOnly: Boolean)
+	suspend fun canSwitchCurrentSession(serverId: UUID, userId: UUID): Boolean
 	suspend fun switchCurrentSession(serverId: UUID, userId: UUID): Boolean
 	fun destroyCurrentSession()
 }
@@ -85,6 +86,22 @@ class SessionRepositoryImpl(
 
 			_state.value = SessionRepositoryState.READY
 		}
+	}
+
+	override suspend fun canSwitchCurrentSession(serverId: UUID, userId: UUID): Boolean {
+		// Already current session
+		if (currentSession.value?.userId == userId) return false
+
+		val account = authenticationStore.getUser(serverId, userId)
+		// Account not found or has no access token
+		if (account?.accessToken == null) return false
+
+		// Server not found or invalid version
+		val server = serverRepository.getServer(serverId)
+		if (server == null || !server.versionSupported) return false
+
+		// We can most likely switch
+		return true
 	}
 
 	override suspend fun switchCurrentSession(serverId: UUID, userId: UUID): Boolean {

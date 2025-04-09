@@ -18,9 +18,10 @@ import timber.log.Timber
  * Authentication is done using the [AuthenticationRepository].
  */
 interface ServerUserRepository {
-	//server
 	fun getStoredServerUsers(server: Server): List<PrivateUser>
 	suspend fun getPublicServerUsers(server: Server): List<PublicUser>
+
+	fun getRecentlyUsedUsers(): List<PrivateUser>
 
 	fun deleteStoredUser(user: PrivateUser)
 }
@@ -59,6 +60,22 @@ class ServerUserRepositoryImpl(
 			emptyList()
 		}
 	}
+
+	override fun getRecentlyUsedUsers() = authenticationStore.getServers()
+		.flatMap { (serverId, server) ->
+			server.users.map { (userId, user) ->
+				val authInfo = authenticationStore.getUser(serverId, userId)
+				PrivateUser(
+					id = userId,
+					serverId = serverId,
+					name = user.name,
+					accessToken = authInfo?.accessToken,
+					imageTag = user.imageTag,
+					lastUsed = user.lastUsed,
+				)
+			}
+		}
+		.sortedWith(compareByDescending<PrivateUser> { it.lastUsed }.thenBy { it.name })
 
 	override fun deleteStoredUser(user: PrivateUser) {
 		// Remove user info from store

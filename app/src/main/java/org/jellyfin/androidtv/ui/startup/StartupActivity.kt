@@ -52,6 +52,8 @@ import java.util.UUID
 class StartupActivity : FragmentActivity() {
 	companion object {
 		const val EXTRA_ITEM_ID = "ItemId"
+		const val EXTRA_SERVER_ID = "server_id"
+		const val EXTRA_USER_ID = "user_id"
 		const val EXTRA_ITEM_IS_USER_VIEW = "ItemIsUserView"
 		const val EXTRA_HIDE_SPLASH = "HideSplash"
 	}
@@ -123,8 +125,14 @@ class StartupActivity : FragmentActivity() {
 				// Clear audio queue in case left over from last run
 				mediaManager.clearAudioQueue()
 
-				val server = startupViewModel.getLastServer()
-				if (server != null) showServer(server.id)
+				val serverId = intent.getStringExtra(EXTRA_SERVER_ID)?.toUUIDOrNull()
+				val userId = intent.getStringExtra(EXTRA_USER_ID)?.toUUIDOrNull()
+
+				var server = startupViewModel.getLastServer()
+				if (serverId != null) server = startupViewModel.getServer(serverId) ?: server
+
+				// Determine fragment to show based on launch intent
+				if (server != null) showServer(server.id, userId)
 				else showServerSelection()
 			}
 		}.launchIn(lifecycleScope)
@@ -182,11 +190,12 @@ class StartupActivity : FragmentActivity() {
 		}
 	}
 
-	private fun showServer(id: UUID) = supportFragmentManager.commit {
+	private fun showServer(id: UUID, userId: UUID? = null) = supportFragmentManager.commit {
 		replace<StartupToolbarFragment>(R.id.content_view)
 		add<ServerFragment>(
 			R.id.content_view, null, bundleOf(
-				ServerFragment.ARG_SERVER_ID to id.toString()
+				ServerFragment.ARG_SERVER_ID to id.toString(),
+				ServerFragment.ARG_USER_ID to userId?.toString(),
 			)
 		)
 	}
