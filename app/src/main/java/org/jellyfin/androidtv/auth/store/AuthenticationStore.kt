@@ -2,7 +2,6 @@ package org.jellyfin.androidtv.auth.store
 
 import android.content.Context
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
