@@ -1,6 +1,7 @@
 package org.jellyfin.androidtv.ui.shared.toolbar
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
-import org.jellyfin.androidtv.ui.base.modifier.childFocusRestorer
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.composable.rememberCurrentTime
 
@@ -39,6 +40,7 @@ fun Logo(modifier: Modifier = Modifier) {
 @Composable
 fun Toolbar(
 	modifier: Modifier = Modifier,
+	logo: Boolean = true,
 	content: @Composable BoxScope.() -> Unit,
 ) {
 	Row(
@@ -47,9 +49,10 @@ fun Toolbar(
 			.height(95.dp)
 			.overscan(),
 	) {
-		Logo()
-
-		Spacer(Modifier.width(24.dp))
+		if (logo) {
+			Logo()
+			Spacer(Modifier.width(24.dp))
+		}
 
 		Box(
 			modifier = Modifier
@@ -61,6 +64,7 @@ fun Toolbar(
 		Spacer(Modifier.width(24.dp))
 
 		val currentTime by rememberCurrentTime()
+
 		Text(
 			text = currentTime,
 			fontSize = 20.sp,
@@ -72,11 +76,13 @@ fun Toolbar(
 
 @Composable
 fun BoxScope.ToolbarButtons(
+	modifier: Modifier = Modifier,
 	content: @Composable RowScope.() -> Unit,
 ) {
 	Row(
-		modifier = Modifier
-			.childFocusRestorer()
+		modifier = modifier
+			.focusRestorer()
+			.focusGroup()
 			.align(Alignment.CenterEnd),
 		horizontalArrangement = Arrangement.spacedBy(8.dp),
 	) {
