@@ -6,39 +6,25 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.compose.AndroidFragment
-import androidx.fragment.compose.FragmentState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.ui.ScreensaverViewModel
 import org.jellyfin.androidtv.ui.background.AppBackground
-import org.jellyfin.androidtv.ui.base.Text
-import org.jellyfin.androidtv.ui.navigation.NavigationAction
-import org.jellyfin.androidtv.ui.navigation.NavigationRepository
+import org.jellyfin.androidtv.ui.navigation.Router
+import org.jellyfin.androidtv.ui.navigation.RouterBackHandler
+import org.jellyfin.androidtv.ui.navigation.RouterContent
 import org.jellyfin.androidtv.ui.screensaver.InAppScreensaver
 import org.jellyfin.androidtv.ui.startup.StartupActivity
 import org.jellyfin.androidtv.ui.startup.fragment.SplashScreen
@@ -46,55 +32,10 @@ import org.jellyfin.androidtv.util.applyTheme
 import org.jellyfin.androidtv.util.isMediaSessionKeyEvent
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.compose.koinInject
 import timber.log.Timber
 
-@Composable
-@Stable
-private fun NavigationBackHandler() {
-	val navigationRepository = koinInject<NavigationRepository>()
-	var backHandlerEnabled by remember { mutableStateOf(navigationRepository.canGoBack) }
-
-	LaunchedEffect(navigationRepository) {
-		navigationRepository.currentAction.onEach {
-			backHandlerEnabled = navigationRepository.canGoBack
-		}.launchIn(this)
-	}
-
-	BackHandler(backHandlerEnabled) {
-		if (navigationRepository.canGoBack) {
-			navigationRepository.goBack()
-		}
-	}
-}
-
-@Composable
-@Stable
-private fun NavigationContent() {
-	val navigationRepository = koinInject<NavigationRepository>()
-	val statefulDestination by remember {
-		navigationRepository.currentAction
-			.filterIsInstance<NavigationAction.NavigateFragment>()
-			.map { it.destination }
-			.distinctUntilChanged()
-			.map { it to FragmentState() }
-	}.collectAsState(null)
-
-	Text(statefulDestination.toString(), color = Color.Red)
-
-	statefulDestination?.let { (destination, state) ->
-		key(destination) {
-			AndroidFragment(
-				clazz = destination.fragment.java,
-				arguments = destination.arguments,
-				fragmentState = state,
-			)
-		}
-	}
-}
-
 class MainActivity : FragmentActivity() {
-	private val navigationRepository by inject<NavigationRepository>()
+	private val router by inject<Router>()
 	private val sessionRepository by inject<SessionRepository>()
 	private val userRepository by inject<UserRepository>()
 	private val screensaverViewModel by viewModel<ScreensaverViewModel>()
@@ -115,11 +56,8 @@ class MainActivity : FragmentActivity() {
 				else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 			}.launchIn(lifecycleScope)
 
-		// Navigation reset on app relaunch
-		if (savedInstanceState == null && navigationRepository.canGoBack) navigationRepository.reset()
-
 		setContent {
-			NavigationBackHandler()
+			RouterBackHandler(router)
 
 			// App content
 			Box {
@@ -127,7 +65,7 @@ class MainActivity : FragmentActivity() {
 
 				val sessionActive by sessionActive.collectAsState(false)
 				if (sessionActive) {
-					NavigationContent()
+					RouterContent(router)
 					InAppScreensaver()
 				} else {
 					SplashScreen()
