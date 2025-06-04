@@ -86,6 +86,16 @@ class InteractionTrackerViewModel(
 		}
 	}
 
+	fun startScreensaverNow(force: Boolean = false) {
+		// Cancel pending timer (if any)
+		timer?.cancel()
+
+		if (inAppEnabled || force) {
+			// Set visibility
+			_screensaverVisible.value = true
+		}
+	}
+
 	private fun checkStillWatchingStatus() {
 		val presetName = userPreferences[UserPreferences.stillWatchingBehavior].toString().uppercase()
 		val preset = runCatching { StillWatchingPresetConfigs.valueOf(presetName) }.getOrDefault(StillWatchingPresetConfigs.DISABLED)

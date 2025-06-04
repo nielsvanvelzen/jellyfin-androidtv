@@ -201,6 +201,10 @@ public class AudioNowPlayingFragment extends Fragment {
         });
         mArtistButton.setOnFocusChangeListener(mainAreaFocusListener);
 
+        binding.fullscreenBtn.setContentDescription(getString(R.string.lbl_open_artist));
+        binding.fullscreenBtn.setOnClickListener(view -> AudioNowPlayingFragmentHelperKt.startScreensaver(this));
+        binding.fullscreenBtn.setOnFocusChangeListener(mainAreaFocusListener);
+
         mCurrentProgress = binding.playerProgress;
         mCurrentPos = binding.currentPos;
         mRemainingTime = binding.remainingTime;
