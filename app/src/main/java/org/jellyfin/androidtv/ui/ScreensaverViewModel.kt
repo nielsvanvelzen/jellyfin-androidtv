@@ -63,6 +63,16 @@ class ScreensaverViewModel(
 		_keepScreenOn.value = inAppEnabled || locks > 0
 	}
 
+	fun startNow(force: Boolean = false) {
+		// Cancel pending timer (if any)
+		timer?.cancel()
+
+		if (inAppEnabled || force) {
+			// Set visibility
+			_visible.value = true
+		}
+	}
+
 	/**
 	 * Create a lock that prevents the screensaver for running until the returned function is called
 	 * or the lifecycle is destroyed.

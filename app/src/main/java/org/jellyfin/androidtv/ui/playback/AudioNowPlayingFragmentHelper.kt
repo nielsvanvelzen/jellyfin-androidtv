@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.ui.ScreensaverViewModel
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.LyricsDtoBox
@@ -39,6 +40,7 @@ import org.jellyfin.playback.jellyfin.queue.baseItem
 import org.jellyfin.playback.jellyfin.queue.baseItemFlow
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.ImageType
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.compose.koinInject
 
 fun initializePreviewView(
@@ -103,4 +105,9 @@ fun initializePreviewView(
 			)
 		}
 	}
+}
+
+fun AudioNowPlayingFragment.startScreensaver() {
+	val screensaverViewModel by activityViewModel<ScreensaverViewModel>()
+	screensaverViewModel.startNow(true)
 }
