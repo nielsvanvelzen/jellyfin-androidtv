@@ -45,6 +45,7 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.auth.model.PrivateUser
 import org.jellyfin.androidtv.auth.model.Server
 import org.jellyfin.androidtv.auth.repository.ServerRepository
+import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.ui.ServerButton
 import org.jellyfin.androidtv.ui.base.Icon
@@ -196,6 +197,7 @@ class QuickSwitchFragment : Fragment() {
 		savedInstanceState: Bundle?
 	) = content {
 		val viewModel = koinViewModel<QuickSwitchViewModel>()
+		val sessionRepository = koinInject<SessionRepository>()
 		val state by viewModel.state.collectAsState()
 		val currentServer = state?.currentServer
 		val recentUsers = state?.recentUsers.orEmpty()
@@ -224,7 +226,22 @@ class QuickSwitchFragment : Fragment() {
 						QuickSwitchProfileRow(
 							users = recentUsers,
 							onOpen = { user ->
-								viewModel.switchUser(user)
+								val activity = context.getActivity()
+
+								// TODO
+//								mediaManager.clearAudioQueue()
+								sessionRepository.destroyCurrentSession()
+
+								// Open login activity
+								val selectUserIntent = Intent(activity, StartupActivity::class.java)
+								selectUserIntent.putExtra(StartupActivity.EXTRA_HIDE_SPLASH, true)
+								selectUserIntent.putExtra(StartupActivity.EXTRA_SERVER_ID, user.serverId.toString())
+								selectUserIntent.putExtra(StartupActivity.EXTRA_USER_ID, user.id.toString())
+								// Remove history to prevent user going back to current activity
+								selectUserIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+
+								activity?.startActivity(selectUserIntent)
+								activity?.finishAfterTransition()
 							}
 						)
 						Spacer(modifier = Modifier.height(32.dp))
@@ -241,7 +258,7 @@ class QuickSwitchFragment : Fragment() {
 
 								// TODO
 //								mediaManager.clearAudioQueue()
-//								sessionRepository.destroyCurrentSession()
+								sessionRepository.destroyCurrentSession()
 
 								// Open login activity
 								val selectUserIntent = Intent(activity, StartupActivity::class.java)

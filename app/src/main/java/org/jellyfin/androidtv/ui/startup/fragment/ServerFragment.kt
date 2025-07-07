@@ -48,6 +48,7 @@ import org.koin.androidx.viewmodel.ext.android.activityViewModel
 class ServerFragment : Fragment() {
 	companion object {
 		const val ARG_SERVER_ID = "server_id"
+		const val ARG_USER_ID = "user_id"
 	}
 
 	private val startupViewModel: StartupViewModel by activityViewModel()
@@ -59,6 +60,7 @@ class ServerFragment : Fragment() {
 	private val binding get() = _binding!!
 
 	private val serverIdArgument get() = arguments?.getString(ARG_SERVER_ID)?.ifBlank { null }?.toUUIDOrNull()
+	private val userIdArgument get() = arguments?.getString(ARG_USER_ID)?.ifBlank { null }?.toUUIDOrNull()
 
 	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 		val server = serverIdArgument?.let(startupViewModel::getServer)
@@ -71,33 +73,7 @@ class ServerFragment : Fragment() {
 		_binding = FragmentServerBinding.inflate(inflater, container, false)
 
 		val userAdapter = UserAdapter(requireContext(), server, startupViewModel, authenticationRepository, serverUserRepository)
-		userAdapter.onItemPressed = { user ->
-			startupViewModel.authenticate(server, user).onEach { state ->
-				when (state) {
-					// Ignored states
-					AuthenticatingState -> Unit
-					AuthenticatedState -> Unit
-					// Actions
-					RequireSignInState -> navigateFragment<UserLoginFragment>(bundleOf(
-						UserLoginFragment.ARG_SERVER_ID to server.id.toString(),
-						UserLoginFragment.ARG_USERNAME to user.name,
-					))
-					// Errors
-					ServerUnavailableState,
-					is ApiClientErrorLoginState -> Toast.makeText(context, R.string.server_connection_failed, Toast.LENGTH_LONG).show()
-
-					is ServerVersionNotSupported -> Toast.makeText(
-						context,
-						getString(
-							R.string.server_issue_outdated_version,
-							state.server.version,
-							ServerRepository.recommendedServerVersion.toString()
-						),
-						Toast.LENGTH_LONG
-					).show()
-				}
-			}.launchIn(lifecycleScope)
-		}
+		userAdapter.onItemPressed = { user -> authenticateUser(server, user) }
 		binding.users.adapter = userAdapter
 
 		startupViewModel.users
@@ -108,6 +84,13 @@ class ServerFragment : Fragment() {
 				binding.users.isFocusable = users.any()
 				binding.noUsersWarning.isVisible = users.isEmpty()
 				binding.root.requestFocus()
+
+				// Automatically launch user requested in launch argument
+				val requestedUser = users.find { user -> user.id == userIdArgument }
+				if (requestedUser != null) {
+					// TODO: This should only be automatically called once...
+					authenticateUser(server, requestedUser)
+				}
 			}.launchIn(viewLifecycleOwner.lifecycleScope)
 
 		startupViewModel.loadUsers(server)
@@ -166,6 +149,36 @@ class ServerFragment : Fragment() {
 		} else {
 			binding.notification.isGone = true
 		}
+	}
+
+	private fun authenticateUser(server: Server, user: User) {
+		startupViewModel.authenticate(server, user).onEach { state ->
+			when (state) {
+				// Ignored states
+				AuthenticatingState -> Unit
+				AuthenticatedState -> Unit
+				// Actions
+				RequireSignInState -> navigateFragment<UserLoginFragment>(
+					bundleOf(
+						UserLoginFragment.ARG_SERVER_ID to server.id.toString(),
+						UserLoginFragment.ARG_USERNAME to user.name,
+					)
+				)
+				// Errors
+				ServerUnavailableState,
+				is ApiClientErrorLoginState -> Toast.makeText(context, R.string.server_connection_failed, Toast.LENGTH_LONG).show()
+
+				is ServerVersionNotSupported -> Toast.makeText(
+					context,
+					getString(
+						R.string.server_issue_outdated_version,
+						state.server.version,
+						ServerRepository.recommendedServerVersion.toString()
+					),
+					Toast.LENGTH_LONG
+				).show()
+			}
+		}.launchIn(lifecycleScope)
 	}
 
 	private inline fun <reified F : Fragment> navigateFragment(
