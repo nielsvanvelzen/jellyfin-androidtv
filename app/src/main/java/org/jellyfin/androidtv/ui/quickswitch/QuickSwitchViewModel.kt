@@ -6,14 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import org.jellyfin.androidtv.auth.model.ApiClientErrorLoginState
-import org.jellyfin.androidtv.auth.model.AuthenticatedState
-import org.jellyfin.androidtv.auth.model.AuthenticatingState
-import org.jellyfin.androidtv.auth.model.AutomaticAuthenticateMethod
 import org.jellyfin.androidtv.auth.model.PrivateUser
-import org.jellyfin.androidtv.auth.model.RequireSignInState
-import org.jellyfin.androidtv.auth.model.ServerUnavailableState
-import org.jellyfin.androidtv.auth.model.ServerVersionNotSupported
 import org.jellyfin.androidtv.auth.repository.AuthenticationRepository
 import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.auth.repository.ServerUserRepository
@@ -45,6 +38,7 @@ class QuickSwitchViewModel(
 		requireNotNull(server)
 
 		val recentUsers = serverUserRepository.getRecentlyUsedUsers()
+			.filter { user -> user.serverId != session.serverId || user.id != session.userId }
 			.take(3)
 			.takeIf { it.size > 1 }
 			.orEmpty()
@@ -57,23 +51,12 @@ class QuickSwitchViewModel(
 
 	fun switchUser(user: PrivateUser) {
 		viewModelScope.launch {
-			val server = serverRepository.getServer(user.serverId)
-			requireNotNull(server)
+			val canSwitch = sessionRepository.canSwitchCurrentSession(user.serverId, user.id)
+			var switched = false
+			if (canSwitch) switched = sessionRepository.switchCurrentSession(user.serverId, user.id)
 
-			authenticationRepository.authenticate(server, AutomaticAuthenticateMethod(user))
-				.collect { state ->
-					when (state) {
-						AuthenticatedState -> navigationRepository.reset(Destinations.home)
-						is ApiClientErrorLoginState,
-						AuthenticatingState,
-						RequireSignInState,
-						ServerUnavailableState,
-						is ServerVersionNotSupported -> {
-							// TODO: If we cannot directly authenticate we should redirect to startup activity
-							// ideally without starting this entire flow too
-						}
-					}
-				}
+			if (switched) navigationRepository.reset(Destinations.home)
+			// else open login fragment?
 		}
 	}
 }

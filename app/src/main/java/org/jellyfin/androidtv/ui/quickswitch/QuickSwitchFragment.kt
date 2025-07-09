@@ -225,24 +225,7 @@ class QuickSwitchFragment : Fragment() {
 						Spacer(modifier = Modifier.height(16.dp))
 						QuickSwitchProfileRow(
 							users = recentUsers,
-							onOpen = { user ->
-								val activity = context.getActivity()
-
-								// TODO
-//								mediaManager.clearAudioQueue()
-								sessionRepository.destroyCurrentSession()
-
-								// Open login activity
-								val selectUserIntent = Intent(activity, StartupActivity::class.java)
-								selectUserIntent.putExtra(StartupActivity.EXTRA_HIDE_SPLASH, true)
-								selectUserIntent.putExtra(StartupActivity.EXTRA_SERVER_ID, user.serverId.toString())
-								selectUserIntent.putExtra(StartupActivity.EXTRA_USER_ID, user.id.toString())
-								// Remove history to prevent user going back to current activity
-								selectUserIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-
-								activity?.startActivity(selectUserIntent)
-								activity?.finishAfterTransition()
-							}
+							onOpen = { user -> viewModel.switchUser(user) }
 						)
 						Spacer(modifier = Modifier.height(32.dp))
 					}
