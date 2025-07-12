@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.core.backend.PlayerBackendEventListener
+import org.jellyfin.playback.core.element.removed
 import org.jellyfin.playback.core.mediastream.PlayableMediaStream
 import org.jellyfin.playback.core.model.PlayState
 import org.jellyfin.playback.core.model.PlaybackOrder
@@ -98,6 +99,17 @@ class QueueService internal constructor() : PlayerService(), Queue {
 		// Return item or null if not found
 		return if (index >= 0 && index < fetchedItems.size) fetchedItems[index]
 		else null
+	}
+
+	override fun indexOf(entry: QueueEntry): Int? {
+		// TODO Does this work properly with the index provider?
+		return fetchedItems.indexOf(entry).takeIf { index -> index != -1 }
+	}
+
+	override suspend fun removeEntry(entry: QueueEntry) {
+		entry.removed = true
+
+		if (_entry.value == entry) next(usePlaybackOrder = true, useRepeatMode = false)
 	}
 
 	override fun clear() {

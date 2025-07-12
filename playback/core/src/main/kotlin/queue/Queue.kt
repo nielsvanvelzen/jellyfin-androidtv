@@ -60,6 +60,21 @@ interface Queue {
 	suspend fun setIndex(index: Int, saveHistory: Boolean = false): QueueEntry?
 
 	/**
+	 * Find the index of a given entry.
+	 *
+	 * @param entry The entry to find the index for
+	 */
+	fun indexOf(entry: QueueEntry): Int?
+
+
+	/**
+	 * Remove a given queue entry.
+	 *
+	 * @param entry The entry to remove
+	 */
+	suspend fun removeEntry(entry: QueueEntry)
+
+	/**
 	 * Get the previously playing entry or null if none.
 	 */
 	suspend fun peekPrevious(): QueueEntry?
