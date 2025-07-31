@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -58,6 +59,69 @@ import org.jellyfin.sdk.model.api.ImageType
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+
+@Composable
+private fun ItemCardTitle(item: BaseItemDto) {
+	Text(
+		text = item.name.orEmpty(),
+		fontSize = 12.sp,
+		maxLines = 3,
+		overflow = TextOverflow.Ellipsis,
+		color = Color.White,
+	)
+}
+
+@Composable
+private fun ItemCardSubtitle(item: BaseItemDto) {
+	Text(
+		text = item.path.orEmpty(),
+		fontSize = 12.sp,
+		maxLines = 3,
+		overflow = TextOverflow.Ellipsis,
+		color = Color.White,
+	)
+}
+
+@Composable
+private fun ItemCardImage(item: BaseItemDto) {
+	val image = item.itemImages[ImageType.PRIMARY]
+
+	if (image != null) {
+		val api = koinInject<ApiClient>()
+		AsyncImage(
+			url = image.getUrl(api),
+			blurHash = image.blurHash,
+			aspectRatio = image.aspectRatio ?: 1f,
+			scaleType = ImageView.ScaleType.CENTER_CROP,
+			modifier = Modifier.fillMaxSize()
+		)
+	}
+}
+
+@Stable
+@Composable
+fun ItemCard(
+	item: BaseItemDto,
+
+	modifier: Modifier = Modifier,
+	image: @Composable (item: BaseItemDto) -> Unit = { ItemCardImage(it) },
+	overlay: @Composable (item: BaseItemDto) -> Unit = {},
+	title: @Composable (item: BaseItemDto) -> Unit = { ItemCardTitle(it) },
+	subtitle: @Composable (item: BaseItemDto) -> Unit = { ItemCardSubtitle(it) },
+	showDetails: Boolean = true,
+) {
+	Column(modifier = Modifier.then(modifier)) {
+		Box {
+			image(item)
+			overlay(item)
+		}
+
+//		AnimatedVisibility(showDetails) {
+			title(item)
+			subtitle(item)
+//		}
+	}
+}
 
 @Composable
 fun BrowserScreenItem(
@@ -131,9 +195,15 @@ fun HomeScreen() {
 					horizontalArrangement = Arrangement.spacedBy(8.dp),
 				) {
 					items(row.items) { item ->
-						BrowserScreenItem(
+//						BrowserScreenItem(
+//							item = item,
+//							onOpen = {},
+//							modifier = Modifier
+//								.height(150.dp)
+//						)
+						ItemCard(
 							item = item,
-							onOpen = {},
+							showDetails = true,
 							modifier = Modifier
 								.height(150.dp)
 						)
