@@ -149,7 +149,7 @@ val appModule = module {
 	viewModel { PhotoPlayerViewModel(get()) }
 	viewModel { SearchViewModel(get()) }
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
-	viewModel { HomeViewModel(get(), get(), get()) }
+	viewModel { HomeViewModel(get(), get(), get(), get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
 
