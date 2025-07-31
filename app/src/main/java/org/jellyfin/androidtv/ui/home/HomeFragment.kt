@@ -5,8 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -14,13 +14,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -31,7 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
@@ -42,11 +45,14 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.databinding.FragmentHomeBinding
+import org.jellyfin.androidtv.ui.base.Icon
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.shared.toolbar.MainToolbar
@@ -60,40 +66,31 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-@Composable
-private fun ItemCardTitle(item: BaseItemDto) {
-	Text(
-		text = item.name.orEmpty(),
-		fontSize = 12.sp,
-		maxLines = 3,
-		overflow = TextOverflow.Ellipsis,
-		color = Color.White,
-	)
+sealed interface ItemCardSize {
+	data class Width(val width: Dp) : ItemCardSize
+	data class Height(val height: Dp) : ItemCardSize
+}
+
+sealed interface ItemCardImageType {
+	data object Primary : ItemCardImageType
+	data object Thumbnail : ItemCardImageType
 }
 
 @Composable
-private fun ItemCardSubtitle(item: BaseItemDto) {
-	Text(
-		text = item.path.orEmpty(),
-		fontSize = 12.sp,
-		maxLines = 3,
-		overflow = TextOverflow.Ellipsis,
-		color = Color.White,
-	)
-}
-
-@Composable
-private fun ItemCardImage(item: BaseItemDto) {
-	val image = item.itemImages[ImageType.PRIMARY]
-
-	if (image != null) {
-		val api = koinInject<ApiClient>()
-		AsyncImage(
-			url = image.getUrl(api),
-			blurHash = image.blurHash,
-			aspectRatio = image.aspectRatio ?: 1f,
-			scaleType = ImageView.ScaleType.CENTER_CROP,
-			modifier = Modifier.fillMaxSize()
+fun ItemCardOverlay(item: BaseItemDto) = Box(
+	modifier = Modifier
+		.fillMaxSize()
+) {
+	if (item.userData?.played == true) {
+		Icon(
+			imageVector = ImageVector.vectorResource(R.drawable.ic_watch),
+			contentDescription = null,
+			modifier = Modifier.align(Alignment.TopEnd)
+		)
+	} else if (item.userData?.unplayedItemCount?.takeIf { it > 0 } != null) {
+		Text(
+			text = item.userData!!.unplayedItemCount.toString(),
+			modifier = Modifier.align(Alignment.TopEnd)
 		)
 	}
 }
@@ -102,75 +99,77 @@ private fun ItemCardImage(item: BaseItemDto) {
 @Composable
 fun ItemCard(
 	item: BaseItemDto,
-
 	modifier: Modifier = Modifier,
-	image: @Composable (item: BaseItemDto) -> Unit = { ItemCardImage(it) },
-	overlay: @Composable (item: BaseItemDto) -> Unit = {},
-	title: @Composable (item: BaseItemDto) -> Unit = { ItemCardTitle(it) },
-	subtitle: @Composable (item: BaseItemDto) -> Unit = { ItemCardSubtitle(it) },
-	showDetails: Boolean = true,
-) {
-	Column(modifier = Modifier.then(modifier)) {
-		Box {
-			image(item)
-			overlay(item)
-		}
-
-//		AnimatedVisibility(showDetails) {
-			title(item)
-			subtitle(item)
-//		}
-	}
-}
-
-@Composable
-fun BrowserScreenItem(
-	item: BaseItemDto,
-	onOpen: () -> Unit,
-	modifier: Modifier = Modifier,
+	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+	size: ItemCardSize = ItemCardSize.Height(150.dp),
+	imageType: ItemCardImageType = ItemCardImageType.Primary,
+	shape: Shape = JellyfinTheme.shapes.medium,
+	overlay: @Composable (item: BaseItemDto) -> Unit = { item -> ItemCardOverlay(item) },
 ) {
 	val api = koinInject<ApiClient>()
-	val backgroundService = koinInject<BackgroundService>()
-	val interactionSource = remember { MutableInteractionSource() }
-	val focused by interactionSource.collectIsFocusedAsState()
-
-	LaunchedEffect(focused) {
-		if (focused) backgroundService.setBackground(item)
+	val image = when (imageType) {
+		ItemCardImageType.Primary -> item.itemImages[ImageType.PRIMARY]
+		ItemCardImageType.Thumbnail -> item.itemImages[ImageType.THUMB]
+	}
+	// TODO: We should NOT infer this from the actual image but have a hardcoded list (probably based on item type) instead
+	val imageAspectRatio = image?.aspectRatio ?: 1f
+	val imageSize = when (size) {
+		is ItemCardSize.Height -> DpSize(size.height * imageAspectRatio, size.height)
+		is ItemCardSize.Width -> DpSize(size.width, size.width / imageAspectRatio)
 	}
 
-	val image = item.itemImages[ImageType.PRIMARY]
+	val focused by interactionSource.collectIsFocusedAsState()
 
-	val shape = RoundedCornerShape(4.dp)
-	Box(
+	Column(
 		modifier = Modifier
-			.clip(shape)
-//			.aspectRatio(style.aspectRatio)
-			.background(Color.Black)
-			.focusable(true, interactionSource)
-			.clickable { onOpen() }
+			.requiredWidth(imageSize.width)
+			.focusable(interactionSource = interactionSource)
 			.then(modifier)
 	) {
-		if (image != null) {
-			AsyncImage(
-				url = image.getUrl(api),
-				blurHash = image.blurHash,
-				aspectRatio = image.aspectRatio ?: 1f,
-				scaleType = ImageView.ScaleType.CENTER_CROP,
-				modifier = Modifier.fillMaxSize()
-			)
+		Box(
+			modifier = Modifier
+				.size(imageSize)
+				.clip(shape)
+		) {
+			if (image != null) {
+				AsyncImage(
+					url = image.getUrl(api),
+					blurHash = image.blurHash,
+					aspectRatio = image.aspectRatio ?: 1f,
+					scaleType = ImageView.ScaleType.CENTER_CROP,
+					modifier = Modifier.fillMaxSize()
+				)
+			}
+
+			Box(modifier = Modifier.fillMaxSize()) {
+				overlay(item)
+			}
 		}
 
 		Text(
 			text = item.name.orEmpty(),
 			fontSize = 12.sp,
-			maxLines = 3,
+			maxLines = 1,
 			overflow = TextOverflow.Ellipsis,
 			color = Color.White,
 			modifier = Modifier
-				.align(Alignment.BottomStart)
-				.fillMaxWidth()
-				.background(Color.Black.copy(alpha = 0.6f))
-				.padding(5.dp)
+				.basicMarquee(
+					iterations = if (focused) Int.MAX_VALUE else 0,
+					initialDelayMillis = 0,
+				),
+		)
+
+		Text(
+			text = item.path.orEmpty(),
+			fontSize = 12.sp,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis,
+			color = Color.White,
+			modifier = Modifier
+				.basicMarquee(
+					iterations = if (focused) Int.MAX_VALUE else 0,
+					initialDelayMillis = 0,
+				),
 		)
 	}
 }
@@ -189,29 +188,22 @@ fun HomeScreen() {
 			verticalArrangement = Arrangement.spacedBy(8.dp),
 		) {
 			items(state.rows) { row ->
-				Text(row.hashCode().toString(), color = Color.White, fontSize = 18.sp)
+				Text(row.title, color = Color.White, fontSize = 18.sp)
 
 				LazyRow(
 					horizontalArrangement = Arrangement.spacedBy(8.dp),
+					modifier = Modifier
+						.focusGroup()
 				) {
 					items(row.items) { item ->
-//						BrowserScreenItem(
-//							item = item,
-//							onOpen = {},
-//							modifier = Modifier
-//								.height(150.dp)
-//						)
 						ItemCard(
 							item = item,
-							showDetails = true,
 							modifier = Modifier
-								.height(150.dp)
 						)
 					}
 				}
 			}
 		}
-		// TODO
 	}
 }
 
