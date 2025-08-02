@@ -20,6 +20,8 @@ import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.CollectionType
+import timber.log.Timber
+import kotlin.time.measureTimedValue
 
 data class HomeRow(
 	val title: String,
@@ -57,15 +59,19 @@ class HomeViewModel(
 	}
 
 	fun update() = viewModelScope.launch(Dispatchers.IO) {
-		val rows = userSettingPreferences.activeHomesections
-			.map { type -> async { loadSection(type) } }
-			.awaitAll()
-			.flatten()
+		val sections = userSettingPreferences.activeHomesections
+		val rows = measureTimedValue {
+			sections
+				.map { type -> async { loadSection(type) } }
+				.awaitAll()
+				.flatten()
+		}
+		Timber.i("Updating ${sections.size} sections took ${rows.duration}")
 
 		// TODO: Add client notifications row
 		// TODO: Add client now playing row
 		_state.value = State(
-			rows = rows,
+			rows = rows.value,
 		)
 	}
 
@@ -84,6 +90,8 @@ class HomeViewModel(
 								groupItems = true,
 								parentId = userView.id,
 								fields = ItemRepository.itemFields,
+//								enableImageTypes = setOf(ImageType.PRIMARY),
+//								enableUserData = false,
 							)
 
 							HomeRow("Latest ${userView.name}", result)
@@ -105,7 +113,7 @@ class HomeViewModel(
 			val result by api.tvShowsApi.getNextUp(
 				limit = ITEM_LIMIT,
 				enableResumable = false,
-				fields = ItemRepository.itemFields
+				fields = ItemRepository.itemFields,
 			)
 			listOf(HomeRow("Next up", result.items))
 		}
