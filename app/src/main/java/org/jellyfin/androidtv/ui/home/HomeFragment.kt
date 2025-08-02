@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,7 +15,11 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -51,6 +58,7 @@ import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.databinding.FragmentHomeBinding
+import org.jellyfin.androidtv.ui.base.Badge
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
@@ -80,18 +88,23 @@ sealed interface ItemCardImageType {
 fun ItemCardOverlay(item: BaseItemDto) = Box(
 	modifier = Modifier
 		.fillMaxSize()
+		.padding(4.dp)
 ) {
-	if (item.userData?.played == true) {
-		Icon(
-			imageVector = ImageVector.vectorResource(R.drawable.ic_watch),
-			contentDescription = null,
-			modifier = Modifier.align(Alignment.TopEnd)
-		)
-	} else if (item.userData?.unplayedItemCount?.takeIf { it > 0 } != null) {
-		Text(
-			text = item.userData!!.unplayedItemCount.toString(),
-			modifier = Modifier.align(Alignment.TopEnd)
-		)
+	Badge(
+		modifier = Modifier
+			.align(Alignment.TopEnd),
+	) {
+		if (item.userData?.played == true) {
+			Icon(
+				imageVector = ImageVector.vectorResource(R.drawable.ic_watch),
+				contentDescription = null,
+				modifier = Modifier.size(12.dp)
+			)
+		} else if (item.userData?.unplayedItemCount?.takeIf { it > 0 } != null) {
+			Text(
+				text = item.userData!!.unplayedItemCount.toString(),
+			)
+		}
 	}
 }
 
@@ -137,7 +150,9 @@ fun ItemCard(
 					blurHash = image.blurHash,
 					aspectRatio = image.aspectRatio ?: 1f,
 					scaleType = ImageView.ScaleType.CENTER_CROP,
-					modifier = Modifier.fillMaxSize()
+					modifier = Modifier
+						.fillMaxSize()
+						.then(if (focused) Modifier.border(5.dp, Color.Red, shape) else Modifier)
 				)
 			}
 
@@ -146,31 +161,59 @@ fun ItemCard(
 			}
 		}
 
-		Text(
-			text = item.name.orEmpty(),
-			fontSize = 12.sp,
-			maxLines = 1,
-			overflow = TextOverflow.Ellipsis,
-			color = Color.White,
-			modifier = Modifier
-				.basicMarquee(
-					iterations = if (focused) Int.MAX_VALUE else 0,
-					initialDelayMillis = 0,
-				),
-		)
+		Column(
+			modifier = Modifier.padding(4.dp),
+			verticalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			Text(
+				text = item.name.orEmpty(),
+				fontSize = 12.sp,
+				fontWeight = FontWeight.SemiBold,
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+				color = Color.White,
+				modifier = Modifier
+					.basicMarquee(
+						iterations = if (focused) Int.MAX_VALUE else 0,
+						initialDelayMillis = 0,
+					),
+			)
 
-		Text(
-			text = item.path.orEmpty(),
-			fontSize = 12.sp,
-			maxLines = 2,
-			overflow = TextOverflow.Ellipsis,
-			color = Color.White,
-			modifier = Modifier
-				.basicMarquee(
-					iterations = if (focused) Int.MAX_VALUE else 0,
-					initialDelayMillis = 0,
-				),
-		)
+			Text(
+				text = item.path.orEmpty(),
+				fontSize = 10.sp,
+				maxLines = 2,
+				overflow = TextOverflow.Ellipsis,
+				color = Color.White,
+				modifier = Modifier
+					.basicMarquee(
+						iterations = if (focused) Int.MAX_VALUE else 0,
+						initialDelayMillis = 0,
+					),
+			)
+		}
+	}
+}
+
+@Composable
+fun HomeRow(
+	visible: Boolean,
+	title: @Composable () -> Unit,
+	items: @Composable (contentPadding: PaddingValues) -> Unit,
+) {
+	AnimatedVisibility(visible) {
+		Column {
+			Box(
+				modifier = Modifier
+					.padding(48.dp, 0.dp)
+			) {
+				title()
+			}
+
+			Spacer(Modifier.height(4.dp))
+
+			items(PaddingValues(48.dp, 0.dp))
+		}
 	}
 }
 
@@ -188,20 +231,27 @@ fun HomeScreen() {
 			verticalArrangement = Arrangement.spacedBy(8.dp),
 		) {
 			items(state.rows) { row ->
-				Text(row.title, color = Color.White, fontSize = 18.sp)
-
-				LazyRow(
-					horizontalArrangement = Arrangement.spacedBy(8.dp),
-					modifier = Modifier
-						.focusGroup()
-				) {
-					items(row.items) { item ->
-						ItemCard(
-							item = item,
+				HomeRow(
+					visible = row.items.isNotEmpty(),
+					title = {
+						Text(row.title, color = Color.White, fontSize = 18.sp)
+					},
+					items = { contentPadding ->
+						LazyRow(
+							horizontalArrangement = Arrangement.spacedBy(8.dp),
+							contentPadding = contentPadding,
 							modifier = Modifier
-						)
+								.focusGroup(),
+						) {
+							items(row.items) { item ->
+								ItemCard(
+									item = item,
+									modifier = Modifier
+								)
+							}
+						}
 					}
-				}
+				)
 			}
 		}
 	}
