@@ -8,7 +8,6 @@ import android.widget.ImageView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
-import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -25,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -34,6 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -134,10 +137,9 @@ fun ItemCard(
 	val focused by interactionSource.collectIsFocusedAsState()
 
 	Column(
-		modifier = Modifier
+		modifier = modifier
 			.requiredWidth(imageSize.width)
 			.focusable(interactionSource = interactionSource)
-			.then(modifier)
 	) {
 		Box(
 			modifier = Modifier
@@ -237,16 +239,18 @@ fun HomeScreen() {
 						Text(row.title, color = Color.White, fontSize = 18.sp)
 					},
 					items = { contentPadding ->
+						val childFocusRequester = remember { FocusRequester() }
 						LazyRow(
 							horizontalArrangement = Arrangement.spacedBy(8.dp),
 							contentPadding = contentPadding,
 							modifier = Modifier
-								.focusGroup(),
+								.focusRestorer(childFocusRequester),
 						) {
-							items(row.items) { item ->
+							itemsIndexed(row.items) { index, item ->
 								ItemCard(
 									item = item,
 									modifier = Modifier
+										.then(if (index == 0) Modifier.focusRequester(childFocusRequester) else Modifier)
 								)
 							}
 						}
