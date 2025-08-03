@@ -16,10 +16,13 @@ import org.jellyfin.androidtv.data.repository.ItemRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
+import org.jellyfin.sdk.model.api.MediaType
 import timber.log.Timber
 import kotlin.time.measureTimedValue
 
@@ -99,17 +102,36 @@ class HomeViewModel(
 					}.awaitAll()
 			}
 		}
-		// TODO
+
 		HomeSectionType.LIBRARY_TILES_SMALL,
-		HomeSectionType.LIBRARY_BUTTONS -> emptyList()
+		HomeSectionType.LIBRARY_BUTTONS -> withContext(Dispatchers.IO) {
+			val userViews = userViewsRepository.views.first().toList()
+			listOf(HomeRow("My Media", userViews))
+		}
 		// TODO
 		HomeSectionType.RESUME,
 		HomeSectionType.RESUME_AUDIO,
-		HomeSectionType.RESUME_BOOK -> emptyList()
+		HomeSectionType.RESUME_BOOK -> withContext(Dispatchers.IO) {
+			val result by api.itemsApi.getResumeItems(
+				limit = ITEM_LIMIT,
+				fields = ItemRepository.itemFields,
+				imageTypeLimit = 1,
+				enableTotalRecordCount = false,
+				mediaTypes = when (type) {
+					HomeSectionType.RESUME_AUDIO -> listOf(MediaType.AUDIO)
+					HomeSectionType.RESUME -> listOf(MediaType.VIDEO)
+					HomeSectionType.RESUME_BOOK -> listOf(MediaType.BOOK)
+					else -> listOf(MediaType.UNKNOWN)
+				},
+				excludeItemTypes = setOf(BaseItemKind.AUDIO_BOOK),
+			)
+
+			listOf(HomeRow("Continue watching/listening/reading", result.items))
+		}
 		// TODO
 		HomeSectionType.ACTIVE_RECORDINGS -> emptyList()
-		// TODO
-		HomeSectionType.NEXT_UP -> {
+
+		HomeSectionType.NEXT_UP -> withContext(Dispatchers.IO) {
 			val result by api.tvShowsApi.getNextUp(
 				limit = ITEM_LIMIT,
 				enableResumable = false,

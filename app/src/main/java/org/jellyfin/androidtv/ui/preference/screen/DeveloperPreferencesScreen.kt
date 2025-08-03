@@ -50,6 +50,13 @@ class DeveloperPreferencesScreen : OptionsFragment() {
 			}
 
 			checkbox {
+				title = "Enable new user interface"
+				setContent(R.string.enable_playback_module_description)
+
+				bind(userPreferences, UserPreferences.experimentalUiEnabled)
+			}
+
+			checkbox {
 				setTitle(R.string.preference_enable_trickplay)
 				setContent(R.string.enable_playback_module_description)
 
