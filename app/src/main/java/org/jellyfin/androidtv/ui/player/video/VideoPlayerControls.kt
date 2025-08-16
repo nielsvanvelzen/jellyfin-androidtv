@@ -1,15 +1,23 @@
 package org.jellyfin.androidtv.ui.player.video
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -35,6 +43,8 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.LocalTextStyle
 import org.jellyfin.androidtv.ui.base.Text
+import org.jellyfin.androidtv.ui.base.button.Button
+import org.jellyfin.androidtv.ui.base.button.ButtonDefaults
 import org.jellyfin.androidtv.ui.base.button.IconButton
 import org.jellyfin.androidtv.ui.base.popover.Popover
 import org.jellyfin.androidtv.ui.composable.rememberPlayerPositionInfo
@@ -65,6 +75,7 @@ fun VideoPlayerControls(
 			PlayPauseButton(playbackManager, playState)
 			RewindButton(playbackManager)
 			FastForwardButton(playbackManager)
+			SubtitlesButton()
 
 			Spacer(Modifier.weight(1f))
 
@@ -264,6 +275,79 @@ private fun MoreOptionsButton(
 				.padding(4.dp)
 		) {
 			content()
+		}
+	}
+}
+
+@Composable
+private fun SubtitlesButton() = Box {
+	var expanded by remember { mutableStateOf(false) }
+	IconButton(
+		onClick = { expanded = true },
+	) {
+		Icon(
+			imageVector = ImageVector.vectorResource(R.drawable.ic_select_subtitle),
+			contentDescription = stringResource(R.string.lbl_subtitle_track),
+		)
+	}
+
+	// TODO temporary hardcoded subtitle tracks for testing UI
+	var subtitleTracks by remember {
+		mutableStateOf(
+			setOf(
+				"English" to false,
+				"Nederlands" to true,
+				"方言" to false,
+				"霊の言葉" to false,
+				"Delvish" to false,
+			)
+		)
+	}
+
+	Popover(
+		expanded = expanded,
+		onDismissRequest = { expanded = false },
+		alignment = Alignment.TopCenter,
+		offset = DpOffset(0.dp, (-5).dp)
+	) {
+		Column(
+			modifier = Modifier
+				.padding(4.dp)
+				.width(IntrinsicSize.Max)
+		) {
+			for ((name, active) in subtitleTracks) {
+				Button(
+					onClick = {
+						subtitleTracks = subtitleTracks
+							.map { it.first to if (it.first == name) !it.second else it.second }
+							.toSet()
+					},
+					modifier = Modifier.fillMaxWidth(),
+					shape = RoundedCornerShape(3.dp),
+					colors = ButtonDefaults.colors(containerColor = Color.Transparent),
+				) {
+					Box(
+						modifier = Modifier
+							.size(16.dp)
+					) {
+						this@Button.AnimatedVisibility(
+							visible = active,
+							enter = fadeIn(),
+							exit = fadeOut(),
+						) {
+							Icon(
+								imageVector = ImageVector.vectorResource(R.drawable.ic_check),
+								// todo string resource
+								contentDescription = "Active subtitle track",
+								modifier = Modifier.fillMaxSize(),
+							)
+						}
+					}
+
+					Spacer(Modifier.width(8.dp))
+					Text(name)
+				}
+			}
 		}
 	}
 }
