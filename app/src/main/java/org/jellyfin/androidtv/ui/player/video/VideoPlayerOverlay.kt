@@ -2,6 +2,7 @@ package org.jellyfin.androidtv.ui.player.video
 
 import androidx.compose.foundation.focusable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -9,6 +10,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalWindowInfo
 import org.jellyfin.androidtv.ui.composable.rememberQueueEntry
 import org.jellyfin.androidtv.ui.player.base.PlayerOverlayLayout
 import org.jellyfin.androidtv.ui.player.base.rememberVisibilityTimer
@@ -22,7 +24,11 @@ fun VideoPlayerOverlay(
 	modifier: Modifier = Modifier,
 	playbackManager: PlaybackManager = koinInject(),
 ) {
+	// Popups have a separate window, so forcefully show overlay when not the active window (e.g. popup is open)
+	// TODO: refactor rememberVisibilityTimer to rememberPlayerOverlayVisibility and move this check inside of it
+	val windowInfo = LocalWindowInfo.current
 	val visibilityTimerState = rememberVisibilityTimer()
+	LaunchedEffect(windowInfo.isWindowFocused) { visibilityTimerState.show() }
 
 	val entry by rememberQueueEntry(playbackManager)
 	val item = entry?.run { baseItemFlow.collectAsState(baseItem) }?.value
@@ -45,7 +51,7 @@ fun VideoPlayerOverlay(
 					false
 				}
 			},
-		visible = visibilityTimerState.visible,
+		visible = visibilityTimerState.visible || !windowInfo.isWindowFocused,
 		header = {
 			VideoPlayerHeader(
 				item = item,
