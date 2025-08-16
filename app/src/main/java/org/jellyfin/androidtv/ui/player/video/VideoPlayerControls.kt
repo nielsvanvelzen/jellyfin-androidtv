@@ -37,6 +37,8 @@ import org.jellyfin.androidtv.ui.base.LocalTextStyle
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.IconButton
 import org.jellyfin.androidtv.ui.base.popover.Popover
+import org.jellyfin.androidtv.ui.base.popover.PopoverMenu
+import org.jellyfin.androidtv.ui.base.popover.PopoverMenuCheckboxItem
 import org.jellyfin.androidtv.ui.composable.rememberPlayerPositionInfo
 import org.jellyfin.androidtv.ui.player.base.PlayerSeekbar
 import org.jellyfin.playback.core.PlaybackManager
@@ -66,6 +68,7 @@ fun VideoPlayerControls(
 			PlayPauseButton(playbackManager, playState)
 			RewindButton(playbackManager)
 			FastForwardButton(playbackManager)
+			SubtitlesButton()
 
 			Spacer(Modifier.weight(1f))
 
@@ -281,4 +284,52 @@ fun PlaybackInfoButton(
 		imageVector = ImageVector.vectorResource(R.drawable.ic_info),
 		contentDescription = stringResource(R.string.playback_info),
 	)
+}
+
+@Composable
+private fun SubtitlesButton() = Box {
+	var expanded by remember { mutableStateOf(false) }
+	IconButton(
+		onClick = { expanded = true },
+	) {
+		Icon(
+			imageVector = ImageVector.vectorResource(R.drawable.ic_select_subtitle),
+			contentDescription = stringResource(R.string.lbl_subtitle_track),
+		)
+	}
+
+	// TODO temporary hardcoded subtitle tracks for testing UI
+	var subtitleTracks by remember {
+		mutableStateOf(
+			setOf(
+				"English" to false,
+				"Nederlands" to true,
+				"方言" to false,
+				"霊の言葉" to false,
+				"Delvish" to false,
+			)
+		)
+	}
+
+	Popover(
+		expanded = expanded,
+		onDismissRequest = { expanded = false },
+		alignment = Alignment.TopCenter,
+		offset = DpOffset(0.dp, (-5).dp)
+	) {
+		PopoverMenu {
+			for ((name, active) in subtitleTracks) {
+				PopoverMenuCheckboxItem(
+					selected = active,
+					onClick = {
+						subtitleTracks = subtitleTracks
+							.map { it.first to if (it.first == name) !it.second else it.second }
+							.toSet()
+					},
+				) {
+					Text(name)
+				}
+			}
+		}
+	}
 }
