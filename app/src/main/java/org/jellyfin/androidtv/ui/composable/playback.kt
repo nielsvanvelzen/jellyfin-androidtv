@@ -5,11 +5,15 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.core.model.PlayState
+import org.jellyfin.playback.core.model.PositionInfo
 import org.jellyfin.playback.core.queue.queue
 import org.koin.compose.koinInject
 import kotlin.math.roundToInt
@@ -64,4 +68,25 @@ fun rememberPlayerProgress(
 	}
 
 	return animatable.value
+}
+
+@Composable
+fun rememberPositionInfo(
+	playbackManager: PlaybackManager = koinInject(),
+): MutableState<PositionInfo> {
+	// TODO Does not update on seek while paused yet
+	val playState by playbackManager.state.playState.collectAsState()
+	val playing = playState == PlayState.PLAYING
+
+	val positionInfo = remember { mutableStateOf(playbackManager.state.positionInfo) }
+
+	LaunchedEffect(playing) {
+		while (playing) {
+			positionInfo.value = playbackManager.state.positionInfo
+
+			delay(1000 - (positionInfo.value.active.inWholeMilliseconds % 1000))
+		}
+	}
+
+	return positionInfo
 }
