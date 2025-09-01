@@ -1,76 +1,90 @@
 package org.jellyfin.androidtv.ui.composable
 
-import android.graphics.drawable.Drawable
-import android.widget.ImageView
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.viewinterop.AndroidView
-import org.jellyfin.androidtv.ui.AsyncImageView
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.util.BlurHashDecoder
-
-private data class AsyncImageState(
-	val url: String?,
-	val blurHash: String?,
-)
+import kotlin.math.round
 
 @Composable
 fun AsyncImage(
 	modifier: Modifier = Modifier,
 	url: String? = null,
 	blurHash: String? = null,
-	placeholder: Drawable? = null,
+	placeholder: Painter? = null,
 	aspectRatio: Float = 1f,
 	blurHashResolution: Int = 32,
-	scaleType: ImageView.ScaleType? = null,
+	contentScale: ContentScale = ContentScale.Fit,
 ) {
-	// Only the important properties are added to AsyncImageState
-	var state by remember { mutableStateOf<AsyncImageState?>(null) }
+	// TODO: Skip blurhash if not loading from network (disk cache)
+	val blurHashPainter = if (blurHash != null) {
+		val width = if (aspectRatio > 1) round(blurHashResolution * aspectRatio).toInt() else blurHashResolution
+		val height = if (aspectRatio >= 1) blurHashResolution else round(blurHashResolution / aspectRatio).toInt()
 
-	AndroidView(
-		modifier = modifier,
-		factory = { context ->
-			AsyncImageView(context).also { view ->
-				view.adjustViewBounds = true
-				view.scaleType = scaleType ?: ImageView.ScaleType.FIT_CENTER
-			}
-		},
-		update = { view ->
-			val compositionState = AsyncImageState(url, blurHash)
-			if (state != compositionState) {
-				state = compositionState
+		blurHashPainter(blurHash, IntSize(width, height), 1f)
+	} else null
 
-				view.load(
-					url = compositionState.url,
-					blurHash = compositionState.blurHash,
-					placeholder = placeholder,
-					aspectRatio = aspectRatio.toDouble(),
-					blurHashResolution = blurHashResolution,
-				)
-			}
-		},
+	val imagePainter = rememberAsyncImagePainter(
+		model = url,
+		contentScale = contentScale,
 	)
+	val imagePainterState by imagePainter.state.collectAsState()
+	val transparentPainter = remember { ColorPainter(Color.Transparent) }
+
+	val visiblePainter = when (imagePainterState) {
+		is AsyncImagePainter.State.Success -> imagePainter
+		is AsyncImagePainter.State.Loading -> blurHashPainter ?: placeholder ?: transparentPainter
+		else -> placeholder ?: blurHashPainter ?: transparentPainter
+	}
+
+	Crossfade(visiblePainter) { painter ->
+		Image(
+			painter = painter,
+			contentDescription = null,
+			modifier = modifier
+				.fillMaxSize(),
+			contentScale = contentScale,
+		)
+	}
 }
 
 @Composable
+@Stable
 fun blurHashPainter(
 	blurHash: String,
 	size: IntSize,
 	punch: Float = 1f,
-): Painter = remember(blurHash, size, punch) {
-	val bitmap = BlurHashDecoder.decode(
-		blurHash = blurHash,
-		width = size.width,
-		height = size.height,
-		punch = punch,
-	)
+	fallback: Painter = ColorPainter(Color.Transparent),
+): Painter {
+	val painter by produceState(initialValue = fallback, blurHash, size, punch) {
+		val bitmap = withContext(Dispatchers.IO) {
+			BlurHashDecoder.decode(
+				blurHash = blurHash,
+				width = size.width,
+				height = size.height,
+				punch = punch,
+			)
+		}?.asImageBitmap()
 
-	BitmapPainter(requireNotNull(bitmap).asImageBitmap())
+		if (bitmap != null) value = BitmapPainter(bitmap)
+	}
+	return painter
 }

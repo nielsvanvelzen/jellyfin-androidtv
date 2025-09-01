@@ -1,6 +1,5 @@
 package org.jellyfin.androidtv.integration.dream.composable
 
-import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -102,7 +101,7 @@ fun DreamContentNowPlaying(
 			AsyncImage(
 				url = primaryImage.getUrl(api),
 				blurHash = primaryImage.blurHash,
-				scaleType = ImageView.ScaleType.CENTER_CROP,
+				contentScale = ContentScale.Crop,
 				modifier = Modifier
 					.size(128.dp)
 					.clip(RoundedCornerShape(5.dp))

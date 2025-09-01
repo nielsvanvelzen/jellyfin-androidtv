@@ -5,7 +5,6 @@ import android.graphics.Rect
 import android.os.Build
 import android.util.AttributeSet
 import android.view.KeyEvent
-import android.widget.ImageView
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -37,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -159,7 +159,7 @@ class UserCardView @JvmOverloads constructor(
 				if (image != null) {
 					AsyncImage(
 						modifier = Modifier.fillMaxSize(),
-						scaleType = ImageView.ScaleType.CENTER_CROP,
+						contentScale = ContentScale.Crop,
 						url = image,
 					)
 				} else {

@@ -2,7 +2,6 @@ package org.jellyfin.androidtv.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.ImageView
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,14 +23,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.AbstractComposeView
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.ProvideTextStyle
 import org.jellyfin.androidtv.ui.base.Text
@@ -94,7 +93,7 @@ fun NowPlayingComposable(
 						AsyncImage(
 							url = image?.getUrl(api),
 							blurHash = image?.blurHash,
-							placeholder = ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_album),
+							placeholder = painterResource(R.drawable.ic_album),
 							aspectRatio = image?.aspectRatio ?: 1f,
 							modifier = Modifier
 								.size(35.dp)
@@ -117,7 +116,7 @@ fun NowPlayingComposable(
 										sweepAngle = 360f * progress,
 									)
 								},
-							scaleType = ImageView.ScaleType.CENTER_CROP,
+							contentScale = ContentScale.Crop,
 						)
 
 						Column(

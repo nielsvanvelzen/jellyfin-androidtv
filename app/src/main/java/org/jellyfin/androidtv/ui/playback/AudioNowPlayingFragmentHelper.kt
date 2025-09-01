@@ -1,6 +1,5 @@
 package org.jellyfin.androidtv.ui.playback
 
-import android.widget.ImageView
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -19,6 +18,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -92,8 +92,8 @@ fun initializePreviewView(
 					AsyncImage(
 						url = cover.getUrl(api),
 						blurHash = cover.blurHash,
-						aspectRatio = cover.aspectRatio?.toFloat() ?: 1f,
-						scaleType = ImageView.ScaleType.CENTER_INSIDE,
+						aspectRatio = cover.aspectRatio ?: 1f,
+						contentScale = ContentScale.Crop,
 						modifier = Modifier
 							.alpha(coverViewAlpha)
 					)
