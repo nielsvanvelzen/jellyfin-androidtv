@@ -34,7 +34,6 @@ import org.jellyfin.androidtv.ui.composable.modifier.fadingEdges
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.player.base.PlayerSeekbar
 import org.jellyfin.androidtv.util.apiclient.albumPrimaryImage
-import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.androidtv.util.apiclient.itemImages
 import org.jellyfin.androidtv.util.apiclient.parentImages
 import org.jellyfin.playback.core.PlaybackManager
@@ -99,8 +98,7 @@ fun DreamContentNowPlaying(
 	) {
 		if (primaryImage != null) {
 			AsyncImage(
-				url = primaryImage.getUrl(api),
-				blurHash = primaryImage.blurHash,
+				image = primaryImage,
 				contentScale = ContentScale.Crop,
 				modifier = Modifier
 					.size(128.dp)

@@ -50,7 +50,6 @@ import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
 import org.koin.androidx.compose.koinViewModel
@@ -105,9 +104,7 @@ fun StillWatchingScreen(
 					.align(Alignment.TopStart)
 					.overscan()
 					.height(75.dp),
-				url = logo.getUrl(api),
-				blurHash = logo.blurHash,
-				aspectRatio = logo.aspectRatio ?: 1f,
+				image = logo,
 			)
 		}
 
@@ -181,9 +178,7 @@ fun StillWatchingOverlay(
 						.height(145.dp)
 						.aspectRatio(thumbnail.aspectRatio ?: 1f)
 						.clip(JellyfinTheme.shapes.extraSmall),
-					url = thumbnail.getUrl(api),
-					blurHash = thumbnail.blurHash,
-					aspectRatio = thumbnail.aspectRatio ?: 1f,
+					image = thumbnail,
 				)
 			}
 		}

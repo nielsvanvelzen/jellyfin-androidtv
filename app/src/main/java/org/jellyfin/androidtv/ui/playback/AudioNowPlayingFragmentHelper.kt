@@ -32,7 +32,6 @@ import org.jellyfin.androidtv.ui.composable.rememberPlayerProgress
 import org.jellyfin.androidtv.ui.composable.rememberQueueEntry
 import org.jellyfin.androidtv.ui.player.base.PlayerSeekbar
 import org.jellyfin.androidtv.util.apiclient.albumPrimaryImage
-import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.androidtv.util.apiclient.itemImages
 import org.jellyfin.androidtv.util.apiclient.parentImages
 import org.jellyfin.playback.core.PlaybackManager
@@ -90,9 +89,7 @@ fun initializePreviewView(
 						.background(Color.Black)
 				) {
 					AsyncImage(
-						url = cover.getUrl(api),
-						blurHash = cover.blurHash,
-						aspectRatio = cover.aspectRatio ?: 1f,
+						image = cover,
 						contentScale = ContentScale.Crop,
 						modifier = Modifier
 							.alpha(coverViewAlpha)

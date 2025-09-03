@@ -41,7 +41,6 @@ import org.jellyfin.androidtv.ui.composable.rememberQueueEntry
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.util.apiclient.albumPrimaryImage
-import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.androidtv.util.apiclient.itemImages
 import org.jellyfin.androidtv.util.apiclient.parentImages
 import org.jellyfin.playback.core.PlaybackManager
@@ -91,10 +90,8 @@ fun NowPlayingComposable(
 						val image = item.itemImages[ImageType.PRIMARY] ?: item.albumPrimaryImage ?: item.parentImages[ImageType.PRIMARY]
 
 						AsyncImage(
-							url = image?.getUrl(api),
-							blurHash = image?.blurHash,
+							image = image,
 							placeholder = painterResource(R.drawable.ic_album),
-							aspectRatio = image?.aspectRatio ?: 1f,
 							modifier = Modifier
 								.size(35.dp)
 								.clip(CircleShape)
