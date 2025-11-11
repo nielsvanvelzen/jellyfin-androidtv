@@ -76,19 +76,27 @@ fun ItemCardOverlay(item: BaseItemDto) = Box(
 		.fillMaxSize()
 		.padding(4.dp)
 ) {
-	Badge(
-		modifier = Modifier
-			.align(Alignment.TopEnd),
-	) {
-		if (item.userData?.played == true) {
+	val isPlayed = item.userData?.played == true
+	val unplayedItems = item.userData?.unplayedItemCount?.takeIf { it > 0 }
+
+	if (isPlayed) {
+		Badge(
+			modifier = Modifier
+				.align(Alignment.TopEnd),
+		) {
 			Icon(
 				imageVector = ImageVector.vectorResource(R.drawable.ic_watch),
 				contentDescription = null,
 				modifier = Modifier.size(12.dp)
 			)
-		} else if (item.userData?.unplayedItemCount?.takeIf { it > 0 } != null) {
+		}
+	} else if (unplayedItems != null) {
+		Badge(
+			modifier = Modifier
+				.align(Alignment.TopEnd),
+		) {
 			Text(
-				text = item.userData!!.unplayedItemCount.toString(),
+				text = unplayedItems.toString(),
 			)
 		}
 	}
