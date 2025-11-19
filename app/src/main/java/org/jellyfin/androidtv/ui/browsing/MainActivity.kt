@@ -7,11 +7,22 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.compose.AndroidFragment
+import androidx.fragment.compose.rememberFragmentState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +35,9 @@ import org.jellyfin.androidtv.databinding.ActivityMainBinding
 import org.jellyfin.androidtv.integration.LeanbackChannelWorker
 import org.jellyfin.androidtv.ui.InteractionTrackerViewModel
 import org.jellyfin.androidtv.ui.background.AppBackground
-import org.jellyfin.androidtv.ui.navigation.NavigationAction
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
+import org.jellyfin.androidtv.ui.base.modifier.autoFocus
+import org.jellyfin.androidtv.ui.navigation.Destination
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.screensaver.InAppScreensaver
 import org.jellyfin.androidtv.ui.settings.compat.MainActivitySettings
@@ -33,9 +46,66 @@ import org.jellyfin.androidtv.util.applyTheme
 import org.jellyfin.androidtv.util.isMediaSessionKeyEvent
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.compose.koinInject
 import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
+	private val navigationRepository by inject<NavigationRepository>()
+
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+
+		if (savedInstanceState == null && navigationRepository.canGoBack) navigationRepository.reset(clearHistory = true)
+
+		setContent {
+			JellyfinTheme {
+				AppBackground()
+				AppContent()
+				InAppScreensaver()
+				MainActivitySettings()
+			}
+		}
+	}
+}
+
+@Composable
+fun AppContent() {
+	val navigationRepository = koinInject<NavigationRepository>()
+	NavDisplay(
+		backStack = navigationRepository.history,
+		onBack = { navigationRepository.goBack() },
+		entryDecorators = listOf(
+			rememberSaveableStateHolderNavEntryDecorator(),
+		),
+		entryProvider = { destination ->
+			NavEntry(destination) {
+				when (destination) {
+					is Destination.ComposableContent -> destination.content()
+					is Destination.Fragment -> DestinationFragment(destination)
+				}
+			}
+		},
+	)
+}
+
+@Composable
+fun DestinationFragment(destination: Destination.Fragment) {
+	val fragmentState = rememberFragmentState()
+	AndroidFragment(
+		modifier = Modifier
+			.fillMaxSize()
+			.autoFocus()
+			.focusGroup()
+			.focusProperties {
+				onExit = { cancelFocusChange() }
+			},
+		clazz = destination.fragment.java,
+		arguments = destination.arguments,
+		fragmentState = fragmentState,
+	)
+}
+
+class MainActivity2 : FragmentActivity() {
 	private val navigationRepository by inject<NavigationRepository>()
 	private val sessionRepository by inject<SessionRepository>()
 	private val userRepository by inject<UserRepository>()
@@ -66,13 +136,13 @@ class MainActivity : FragmentActivity() {
 		onBackPressedDispatcher.addCallback(this, backPressedCallback)
 		if (savedInstanceState == null && navigationRepository.canGoBack) navigationRepository.reset(clearHistory = true)
 
-		navigationRepository.currentAction
-			.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-			.onEach { action ->
-				handleNavigationAction(action)
-				backPressedCallback.isEnabled = navigationRepository.canGoBack
-				interactionTrackerViewModel.notifyInteraction(canCancel = false, userInitiated = false)
-			}.launchIn(lifecycleScope)
+//		navigationRepository.currentAction
+//			.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+//			.onEach { action ->
+//				handleNavigationAction(action)
+//				backPressedCallback.isEnabled = navigationRepository.canGoBack
+//				interactionTrackerViewModel.notifyInteraction(canCancel = false, userInitiated = false)
+//			}.launchIn(lifecycleScope)
 
 		binding = ActivityMainBinding.inflate(layoutInflater)
 		binding.background.setContent { AppBackground() }
@@ -116,17 +186,6 @@ class MainActivity : FragmentActivity() {
 		lifecycleScope.launch(Dispatchers.IO) {
 			Timber.i("MainActivity stopped")
 			sessionRepository.restoreSession(destroyOnly = true)
-		}
-	}
-
-	private fun handleNavigationAction(action: NavigationAction) {
-		interactionTrackerViewModel.notifyInteraction(canCancel = true, userInitiated = false)
-
-		when (action) {
-			is NavigationAction.NavigateFragment -> binding.contentView.navigate(action)
-			NavigationAction.GoBack -> binding.contentView.goBack()
-
-			NavigationAction.Nothing -> Unit
 		}
 	}
 

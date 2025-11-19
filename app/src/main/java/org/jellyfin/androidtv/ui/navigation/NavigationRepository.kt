@@ -1,22 +1,13 @@
 package org.jellyfin.androidtv.ui.navigation
 
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import androidx.compose.runtime.mutableStateListOf
 import timber.log.Timber
-import java.util.Stack
 
 /**
  * Repository for app navigation. This manages the screens/pages for the app.
  */
 interface NavigationRepository {
-	/**
-	 * The current action to act on.
-	 *
-	 * @see NavigationAction
-	 */
-	val currentAction: SharedFlow<NavigationAction>
+	val history: List<Destination>
 
 	/**
 	 * Navigate to [destination].
@@ -47,54 +38,46 @@ interface NavigationRepository {
 	fun goBack(): Boolean
 
 	/**
-	 * Reset navigation to the initial destination or a specific [Destination.Fragment].
+	 * Reset navigation to the initial destination or a specific [Destination].
 	 *
 	 * @param clearHistory Empty out the back stack
 	 */
-	fun reset(destination: Destination.Fragment? = null, clearHistory: Boolean)
+	fun reset(destination: Destination? = null, clearHistory: Boolean)
 
 	/**
-	 * Reset navigation to the initial destination or a specific [Destination.Fragment] without clearing history.
+	 * Reset navigation to the initial destination or a specific [Destination] without clearing history.
 	 */
-	fun reset(destination: Destination.Fragment? = null) = reset(destination, false)
+	fun reset(destination: Destination? = null) = reset(destination, false)
 }
 
 class NavigationRepositoryImpl(
-	private val defaultDestination: Destination.Fragment,
+	private val defaultDestination: Destination,
 ) : NavigationRepository {
-	private val fragmentHistory = Stack<Destination.Fragment>()
-
-	private val _currentAction = MutableSharedFlow<NavigationAction>(1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-	override val currentAction = _currentAction.asSharedFlow()
+	private val _history = mutableStateListOf(defaultDestination)
+	override val history = _history
 
 	override fun navigate(destination: Destination, replace: Boolean) {
 		Timber.i("Navigating to $destination (via navigate function)")
-		val action = when (destination) {
-			is Destination.Fragment -> NavigationAction.NavigateFragment(destination, true, replace, false)
-		}
-		if (destination is Destination.Fragment) {
-			if (replace && fragmentHistory.isNotEmpty()) fragmentHistory[fragmentHistory.lastIndex] = destination
-			else fragmentHistory.push(destination)
-		}
-		_currentAction.tryEmit(action)
+
+		if (replace && _history.isNotEmpty()) _history[_history.size - 1] = destination
+		else _history += destination
 	}
 
-	override val canGoBack: Boolean get() = fragmentHistory.isNotEmpty()
+	override val canGoBack: Boolean get() = _history.isNotEmpty()
 
 	override fun goBack(): Boolean {
-		if (fragmentHistory.empty()) return false
+		if (_history.isEmpty()) return false
 
 		Timber.i("Navigating back")
-		fragmentHistory.pop()
-		_currentAction.tryEmit(NavigationAction.GoBack)
+		_history.removeAt(_history.size - 1)
 		return true
 	}
 
-	override fun reset(destination: Destination.Fragment?, clearHistory: Boolean) {
-		fragmentHistory.clear()
+	override fun reset(destination: Destination?, clearHistory: Boolean) {
 		val actualDestination = destination ?: defaultDestination
-		_currentAction.tryEmit(NavigationAction.NavigateFragment(actualDestination, true, false, clearHistory))
 		Timber.i("Navigating to $actualDestination (via reset, clearHistory=$clearHistory)")
+		_history.clear()
+		_history += actualDestination
 	}
 }
 
