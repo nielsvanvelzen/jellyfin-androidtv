@@ -3,7 +3,11 @@ package org.jellyfin.androidtv.ui.player.video
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.composable.rememberQueueEntry
 import org.jellyfin.androidtv.ui.player.base.PlayerOverlayLayout
 import org.jellyfin.androidtv.ui.player.base.rememberPlayerOverlayVisibility
@@ -21,6 +25,7 @@ fun VideoPlayerOverlay(
 	mediaToastRegistry: MediaToastRegistry,
 ) {
 	val visibilityState = rememberPlayerOverlayVisibility()
+	var debugInfoVisible by remember { mutableStateOf(false) }
 
 	val entry by rememberQueueEntry(playbackManager)
 	val item = entry?.run { baseItemFlow.collectAsState(baseItem) }?.value
@@ -36,9 +41,18 @@ fun VideoPlayerOverlay(
 		controls = {
 			VideoPlayerControls(
 				playbackManager = playbackManager,
+				debugInfoVisible = debugInfoVisible,
+				onSetDebugInfoVisible = { visible -> debugInfoVisible = visible }
 			)
-		},
+		}
 	)
 
 	MediaToasts(mediaToastRegistry)
+
+	if (debugInfoVisible) {
+		VideoDebugInfoBox(
+			modifier = Modifier
+				.overscan()
+		)
+	}
 }

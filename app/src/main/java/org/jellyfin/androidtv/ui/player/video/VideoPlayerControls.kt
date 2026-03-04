@@ -32,13 +32,17 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.base.Icon
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.LocalTextStyle
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.IconButton
+import org.jellyfin.androidtv.ui.base.button.IconButtonDefaults
 import org.jellyfin.androidtv.ui.base.popover.Popover
 import org.jellyfin.androidtv.ui.composable.rememberPlayerPositionInfo
 import org.jellyfin.androidtv.ui.player.base.PlayerSeekbar
+import org.jellyfin.androidtv.ui.settings.compat.rememberPreference
 import org.jellyfin.playback.core.PlaybackManager
 import org.jellyfin.playback.core.model.PlayState
 import org.jellyfin.playback.core.queue.queue
@@ -49,9 +53,13 @@ import kotlin.time.DurationUnit
 
 @Composable
 fun VideoPlayerControls(
-	playbackManager: PlaybackManager = koinInject()
+	playbackManager: PlaybackManager = koinInject(),
+	userPreferences: UserPreferences = koinInject(),
+	debugInfoVisible: Boolean,
+	onSetDebugInfoVisible: (visible: Boolean) -> Unit,
 ) {
 	val playState by playbackManager.state.playState.collectAsState()
+	val debuggingEnabled by rememberPreference(userPreferences, UserPreferences.debuggingEnabled)
 
 	Column(
 		verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
@@ -67,6 +75,8 @@ fun VideoPlayerControls(
 			FastForwardButton(playbackManager)
 
 			Spacer(Modifier.weight(1f))
+
+			if (debuggingEnabled) DebugInfoButton(debugInfoVisible, onSetDebugInfoVisible)
 
 			MoreOptionsButton {
 				PreviousEntryButton(playbackManager)
@@ -266,4 +276,21 @@ private fun MoreOptionsButton(
 			content()
 		}
 	}
+}
+
+@Composable
+private fun DebugInfoButton(
+	active: Boolean,
+	onSetDebugInfoVisible: (visible: Boolean) -> Unit
+) = IconButton(
+	onClick = { onSetDebugInfoVisible(!active) },
+	colors = if (active) IconButtonDefaults.colors(
+		containerColor = JellyfinTheme.colorScheme.buttonActive,
+		contentColor = JellyfinTheme.colorScheme.onButtonActive,
+	) else IconButtonDefaults.colors(),
+) {
+	Icon(
+		imageVector = ImageVector.vectorResource(R.drawable.ic_help),
+		contentDescription = stringResource(R.string.playback_debug_info),
+	)
 }
