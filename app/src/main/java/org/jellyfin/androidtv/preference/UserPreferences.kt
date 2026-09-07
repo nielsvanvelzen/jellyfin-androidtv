@@ -9,8 +9,8 @@ import org.jellyfin.androidtv.preference.constant.AudioBehavior
 import org.jellyfin.androidtv.preference.constant.BackdropBehavior
 import org.jellyfin.androidtv.preference.constant.BufferLength
 import org.jellyfin.androidtv.preference.constant.ClockBehavior
-import org.jellyfin.androidtv.preference.constant.HdrOverrideMode
 import org.jellyfin.androidtv.preference.constant.HEVCLevel
+import org.jellyfin.androidtv.preference.constant.HdrOverrideMode
 import org.jellyfin.androidtv.preference.constant.NextUpBehavior
 import org.jellyfin.androidtv.preference.constant.RefreshRateSwitchingBehavior
 import org.jellyfin.androidtv.preference.constant.StillWatchingBehavior
@@ -179,6 +179,11 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		 * Use playback rewrite module for video
 		 */
 		var playbackRewriteVideoEnabled = booleanPreference("playback_new", false)
+
+		/**
+		 * Use new experimental composed based UI rewrite
+		 */
+		var experimentalUiEnabled = booleanPreference("ui_v2", false)
 
 		/**
 		 * When to show the clock.
