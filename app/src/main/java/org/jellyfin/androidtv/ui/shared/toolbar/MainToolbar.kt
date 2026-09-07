@@ -55,6 +55,7 @@ enum class MainToolbarActiveButton {
 
 @Composable
 fun MainToolbar(
+	modifier: Modifier = Modifier,
 	activeButton: MainToolbarActiveButton = MainToolbarActiveButton.None,
 ) {
 	val userRepository = koinInject<UserRepository>()
@@ -67,11 +68,13 @@ fun MainToolbar(
 	MainToolbar(
 		userImage = userImage,
 		activeButton = activeButton,
+		modifier = modifier,
 	)
 }
 
 @Composable
 private fun MainToolbar(
+	modifier: Modifier = Modifier,
 	userImage: String? = null,
 	activeButton: MainToolbarActiveButton,
 ) {
@@ -87,7 +90,7 @@ private fun MainToolbar(
 	)
 
 	Toolbar(
-		modifier = Modifier
+		modifier = modifier
 			.focusRestorer(focusRequester)
 			.focusGroup(),
 		start = {

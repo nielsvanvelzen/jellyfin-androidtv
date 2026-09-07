@@ -70,7 +70,7 @@ class SearchFragment : Fragment() {
 		}
 
 		Column {
-			MainToolbar(MainToolbarActiveButton.Search)
+			MainToolbar(activeButton = MainToolbarActiveButton.Search)
 
 			Row(
 				horizontalArrangement = Arrangement.spacedBy(12.dp),
