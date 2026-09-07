@@ -47,7 +47,7 @@ class HomeFragment : Fragment() {
 		LaunchedEffect(rowsFocusRequester) { rowsFocusRequester.requestFocus() }
 
 		Column {
-			MainToolbar(MainToolbarActiveButton.Home)
+			MainToolbar(activeButton = MainToolbarActiveButton.Home)
 
 			// The leanback code has its own awful focus handling that doesn't work properly with Compose view inteop to workaround this
 			// issue we add custom behavior that only allows focus exit when the current selected row is the first one. Additionally when
