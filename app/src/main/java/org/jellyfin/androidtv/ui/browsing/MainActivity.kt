@@ -6,6 +6,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -20,14 +22,17 @@ import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.integration.LeanbackChannelWorker
+import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.InteractionTrackerViewModel
 import org.jellyfin.androidtv.ui.background.AppBackground
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.ProvideLocalInteractionTracker
 import org.jellyfin.androidtv.ui.composable.compat.AppNavigationHost
+import org.jellyfin.androidtv.ui.main.MainActivityContent
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.screensaver.InAppScreensaver
 import org.jellyfin.androidtv.ui.settings.compat.MainActivitySettings
+import org.jellyfin.androidtv.ui.settings.compat.rememberPreference
 import org.jellyfin.androidtv.ui.startup.StartupActivity
 import org.jellyfin.androidtv.util.applyTheme
 import org.koin.android.ext.android.inject
@@ -40,6 +45,7 @@ class MainActivity : FragmentActivity() {
 	private val userRepository by inject<UserRepository>()
 	private val interactionTrackerViewModel by viewModel<InteractionTrackerViewModel>()
 	private val workManager by inject<WorkManager>()
+	private val userPreferences by inject<UserPreferences>()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		applyTheme()
@@ -67,12 +73,9 @@ class MainActivity : FragmentActivity() {
 				ProvideLocalInteractionTracker(
 					interactionTracker = { interactionTrackerViewModel.notifyInteraction(false, userInitiated = true) }
 				) {
-					AppBackground()
-					AppNavigationHost(
-						navigationRepository = navigationRepository,
-					)
-					InAppScreensaver()
-					MainActivitySettings()
+					val experimentalUiEnabled by rememberPreference(userPreferences, UserPreferences.experimentalUiEnabled)
+					if (experimentalUiEnabled) ExperimentalUiContent()
+					else LegacyUiContent(navigationRepository)
 				}
 			}
 		}
@@ -136,3 +139,18 @@ class MainActivity : FragmentActivity() {
 	override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean =
 		onKeyEvent(keyCode, event) || super.onKeyUp(keyCode, event)
 }
+
+@Composable
+private fun LegacyUiContent(
+	navigationRepository: NavigationRepository,
+) {
+	AppBackground()
+	AppNavigationHost(
+		navigationRepository = navigationRepository,
+	)
+	InAppScreensaver()
+	MainActivitySettings()
+}
+
+@Composable
+private fun ExperimentalUiContent() = MainActivityContent()
