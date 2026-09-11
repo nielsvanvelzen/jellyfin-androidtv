@@ -32,6 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
@@ -56,6 +59,7 @@ import org.jellyfin.androidtv.ui.main.Routes
 import org.jellyfin.androidtv.ui.navigation.LocalRouter
 import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
 import org.jellyfin.androidtv.ui.shared.toolbar.ToolbarClock
+import org.jellyfin.design.token.ColorTokens
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
@@ -65,9 +69,9 @@ fun NavigationLayout(
 	content: @Composable BoxScope.() -> Unit,
 ) {
 	val collapsedWidth = 64.dp
-	val expandedWidth = 220.dp
+	val expandedWidth = 200.dp
 
-	val navigationFocusRequester = remember { FocusRequester() }
+	val (navigationRequester, contentRequester) = remember { FocusRequester.createRefs() }
 	var navigationFocused by remember { mutableStateOf(false) }
 	val navigationWidth by animateDpAsState(
 		targetValue = if (navigationFocused) expandedWidth else collapsedWidth,
@@ -77,26 +81,33 @@ fun NavigationLayout(
 	Layout(
 		modifier = Modifier
 			.fillMaxSize()
-			.focusRestorer(navigationFocusRequester),
+			.focusGroup()
+			.focusRestorer(contentRequester),
 		content = {
-			// Nav
+			// Navigation
 			Column(
 				modifier = Modifier
-					.background(JellyfinTheme.colorScheme.surface)
+					.background(ColorTokens.colorBluegrey950)
 					.fillMaxHeight()
 					.width(navigationWidth)
-					.focusGroup()
 					.onFocusChanged {
 						navigationFocused = it.hasFocus
-					},
+					}
+					.focusProperties {
+						end = contentRequester
+					}
+					.focusRequester(navigationRequester),
 				content = navigation,
 			)
 
 			// Content
 			Box(
 				modifier = Modifier
-					.focusGroup()
-					.focusRequester(navigationFocusRequester),
+					.focusRestorer()
+					.focusProperties {
+						start = navigationRequester
+					}
+					.focusRequester(contentRequester),
 				content = content,
 			)
 		},
@@ -123,76 +134,81 @@ fun NavigationLayout(
 }
 
 @Composable
-fun HomeScreen() {
+fun Navigation() {
 	val router = LocalRouter.current
 	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
+
+	Image(
+		painter = painterResource(R.drawable.ic_jellyfin),
+		contentDescription = null,
+		modifier = Modifier
+			.size(64.dp)
+			.padding(8.dp)
+	)
+
+	Column(
+		verticalArrangement = Arrangement.spacedBy(4.dp),
+		modifier = Modifier
+			.padding(4.dp)
+	) {
+		Button(
+			onClick = { router.push(Routes.SEARCH) },
+			colors = ButtonDefaults.colors(containerColor = Color.Transparent),
+			modifier = Modifier.fillMaxWidth()
+		) {
+			Icon(
+				painter = painterResource(R.drawable.ic_search),
+				contentDescription = stringResource(R.string.lbl_search),
+			)
+			Spacer(modifier = Modifier.width(8.dp))
+			Text(text = stringResource(R.string.lbl_search), softWrap = false, overflow = TextOverflow.Ellipsis)
+		}
+
+		Button(
+			onClick = { router.push(Routes.MAIN) },
+			colors = ButtonDefaults.colors(containerColor = Color.Transparent),
+			modifier = Modifier.fillMaxWidth()
+		) {
+			Icon(
+				painter = painterResource(R.drawable.ic_house),
+				contentDescription = stringResource(R.string.lbl_home),
+			)
+			Spacer(modifier = Modifier.width(8.dp))
+			Text(text = stringResource(R.string.lbl_home), softWrap = false, overflow = TextOverflow.Ellipsis)
+		}
+
+		Spacer(Modifier.weight(1f))
+
+		Button(
+			onClick = { settingsViewModel.show() },
+			colors = ButtonDefaults.colors(containerColor = Color.Transparent),
+			modifier = Modifier.fillMaxWidth()
+		) {
+			Icon(
+				painter = painterResource(R.drawable.ic_settings),
+				contentDescription = stringResource(R.string.settings),
+			)
+			Spacer(modifier = Modifier.width(8.dp))
+			Text(text = stringResource(R.string.settings), softWrap = false, overflow = TextOverflow.Ellipsis)
+		}
+	}
+}
+
+@Composable
+fun HomeScreen() {
 	val serverRepository = koinInject<ServerRepository>()
 	val backgroundService = koinInject<BackgroundService>()
 	val currentServer by serverRepository.currentServer.collectAsState()
 
-	LaunchedEffect(currentServer) {
+	LaunchedEffect(backgroundService, currentServer) {
 		if (currentServer != null) backgroundService.setBackground(currentServer!!)
 		else backgroundService.clearBackgrounds()
 	}
 
 	AppBackground()
+
 	NavigationLayout(
-		navigation = {
-			Image(
-				painter = painterResource(R.drawable.ic_jellyfin),
-				contentDescription = null,
-				modifier = Modifier
-					.size(64.dp)
-					.padding(8.dp)
-			)
-
-			Column(
-				verticalArrangement = Arrangement.spacedBy(4.dp),
-				modifier = Modifier
-					.padding(4.dp)
-			) {
-				Button(
-					onClick = { router.push(Routes.SEARCH) },
-					colors = ButtonDefaults.colors(containerColor = Color.Transparent),
-					modifier = Modifier.fillMaxWidth()
-				) {
-					Icon(
-						painter = painterResource(R.drawable.ic_search),
-						contentDescription = stringResource(R.string.lbl_search),
-					)
-					Spacer(modifier = Modifier.width(8.dp))
-					Text(text = stringResource(R.string.lbl_search), softWrap = false, overflow = TextOverflow.Ellipsis)
-				}
-
-				Button(
-					onClick = { router.push(Routes.MAIN) },
-					colors = ButtonDefaults.colors(containerColor = Color.Transparent),
-					modifier = Modifier.fillMaxWidth()
-				) {
-					Icon(
-						painter = painterResource(R.drawable.ic_house),
-						contentDescription = stringResource(R.string.lbl_home),
-					)
-					Spacer(modifier = Modifier.width(8.dp))
-					Text(text = stringResource(R.string.lbl_home), softWrap = false, overflow = TextOverflow.Ellipsis)
-				}
-
-				Spacer(Modifier.weight(1f))
-
-				Button(
-					onClick = { settingsViewModel.show() },
-					colors = ButtonDefaults.colors(containerColor = Color.Transparent),
-					modifier = Modifier.fillMaxWidth()
-				) {
-					Icon(
-						painter = painterResource(R.drawable.ic_settings),
-						contentDescription = stringResource(R.string.settings),
-					)
-					Spacer(modifier = Modifier.width(8.dp))
-					Text(text = stringResource(R.string.settings), softWrap = false, overflow = TextOverflow.Ellipsis)
-				}
-			}
-		},
+		navigation = { Navigation() },
 	) {
 		Column(
 			modifier = Modifier
@@ -228,7 +244,9 @@ fun ItemCards() {
 	Row(
 		modifier = Modifier
 			.horizontalScroll(rememberScrollState())
-			.padding(16.dp, 0.dp),
+			.padding(16.dp, 0.dp)
+			.focusGroup()
+			.focusRestorer(),
 		horizontalArrangement = Arrangement.spacedBy(16.dp)
 	) {
 		repeat(50) {
