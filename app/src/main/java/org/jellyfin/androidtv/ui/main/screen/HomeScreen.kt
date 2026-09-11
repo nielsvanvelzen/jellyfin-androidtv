@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,6 +36,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,35 +64,61 @@ fun NavigationLayout(
 	navigation: @Composable ColumnScope.() -> Unit,
 	content: @Composable BoxScope.() -> Unit,
 ) {
+	val collapsedWidth = 64.dp
+	val expandedWidth = 220.dp
+
 	val navigationFocusRequester = remember { FocusRequester() }
+	var navigationFocused by remember { mutableStateOf(false) }
+	val navigationWidth by animateDpAsState(
+		targetValue = if (navigationFocused) expandedWidth else collapsedWidth,
+		label = "navigationWidth",
+	)
 
-	Row(
+	Layout(
 		modifier = Modifier
-			.focusRestorer(navigationFocusRequester)
-	) {
-		var navigationFocused by remember { mutableStateOf(false) }
-		val navigationWidth by animateDpAsState(if (navigationFocused) 200.dp else 64.dp)
+			.fillMaxSize()
+			.focusRestorer(navigationFocusRequester),
+		content = {
+			// Nav
+			Column(
+				modifier = Modifier
+					.background(JellyfinTheme.colorScheme.surface)
+					.fillMaxHeight()
+					.width(navigationWidth)
+					.focusGroup()
+					.onFocusChanged {
+						navigationFocused = it.hasFocus
+					},
+				content = navigation,
+			)
 
-		// Nav
-		Column(
-			modifier = Modifier
-				.background(JellyfinTheme.colorScheme.surface)
-				.fillMaxHeight()
-				.width(navigationWidth)
-				.focusGroup()
-				.onFocusChanged {
-					navigationFocused = it.hasFocus
-				},
-			content = navigation,
+			// Content
+			Box(
+				modifier = Modifier
+					.focusGroup()
+					.focusRequester(navigationFocusRequester),
+				content = content,
+			)
+		},
+	) { measurables, constraints ->
+		val (navigation, content) = measurables
+
+		val navigationPlaceable = navigation.measure(
+			constraints.copy(minWidth = 0, maxWidth = navigationWidth.roundToPx())
 		)
 
-		// Content
-		Box(
-			modifier = Modifier
-				.focusGroup()
-				.focusRequester(navigationFocusRequester),
-			content = content,
+		val contentWidth = constraints.maxWidth - collapsedWidth.roundToPx()
+		val contentPlaceable = content.measure(
+			constraints.copy(minWidth = contentWidth, maxWidth = contentWidth),
 		)
+
+		layout(
+			width = constraints.maxWidth,
+			height = constraints.maxHeight,
+		) {
+			navigationPlaceable.placeRelative(x = 0, y = 0)
+			contentPlaceable.placeRelative(x = navigationWidth.roundToPx(), y = 0)
+		}
 	}
 }
 
@@ -107,6 +135,7 @@ fun HomeScreen() {
 		else backgroundService.clearBackgrounds()
 	}
 
+	AppBackground()
 	NavigationLayout(
 		navigation = {
 			Image(
@@ -165,8 +194,6 @@ fun HomeScreen() {
 			}
 		},
 	) {
-		AppBackground()
-
 		Column(
 			modifier = Modifier
 				.verticalScroll(rememberScrollState())
