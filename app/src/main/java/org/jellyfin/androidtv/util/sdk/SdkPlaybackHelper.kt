@@ -28,10 +28,12 @@ import org.jellyfin.sdk.model.api.ItemFilter
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.extensions.ticks
+import org.koin.core.annotation.Single
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+@Single(binds = [PlaybackHelper::class])
 class SdkPlaybackHelper(
 	private val api: ApiClient,
 	private val userPreferences: UserPreferences,

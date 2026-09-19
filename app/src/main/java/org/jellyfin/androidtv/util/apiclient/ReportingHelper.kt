@@ -17,9 +17,11 @@ import org.jellyfin.sdk.model.api.PlaybackProgressInfo
 import org.jellyfin.sdk.model.api.PlaybackStartInfo
 import org.jellyfin.sdk.model.api.PlaybackStopInfo
 import org.jellyfin.sdk.model.api.RepeatMode
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.time.Instant
 
+@Single
 class ReportingHelper(
 	private val dataRefreshService: DataRefreshService,
 	private val api: ApiClient,

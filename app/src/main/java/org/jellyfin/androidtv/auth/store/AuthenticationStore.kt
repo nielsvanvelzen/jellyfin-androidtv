@@ -15,6 +15,7 @@ import kotlinx.serialization.modules.contextual
 import org.jellyfin.androidtv.auth.model.AuthenticationStoreServer
 import org.jellyfin.androidtv.auth.model.AuthenticationStoreUser
 import org.jellyfin.sdk.model.serializer.UUIDSerializer
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.util.UUID
 
@@ -24,6 +25,7 @@ import java.util.UUID
  *
  * The data is stored in a JSON file located in the applications data directory.
  */
+@Single
 class AuthenticationStore(
 	private val context: Context,
 ) {

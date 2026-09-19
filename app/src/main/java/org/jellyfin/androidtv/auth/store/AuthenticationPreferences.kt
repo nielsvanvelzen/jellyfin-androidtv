@@ -7,7 +7,9 @@ import org.jellyfin.preference.booleanPreference
 import org.jellyfin.preference.enumPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 import org.jellyfin.preference.stringPreference
+import org.koin.core.annotation.Single
 
+@Single
 class AuthenticationPreferences(context: Context) : SharedPreferenceStore(
 	sharedPreferences = context.getSharedPreferences("authentication", Context.MODE_PRIVATE)
 ) {

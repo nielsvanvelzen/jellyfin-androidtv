@@ -27,6 +27,7 @@ import org.jellyfin.preference.longPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 import org.jellyfin.preference.stringPreference
 import org.jellyfin.sdk.model.api.MediaSegmentType
+import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -35,6 +36,7 @@ import kotlin.time.Duration.Companion.minutes
  *
  * @param context Context to get the SharedPreferences from
  */
+@Single
 class UserPreferences(context: Context) : SharedPreferenceStore(
 	sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 ) {

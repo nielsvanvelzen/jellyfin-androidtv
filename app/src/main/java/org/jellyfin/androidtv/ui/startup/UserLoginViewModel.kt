@@ -31,15 +31,18 @@ import org.jellyfin.sdk.Jellyfin
 import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
 import org.jellyfin.sdk.model.DeviceInfo
+import org.koin.core.annotation.KoinViewModel
+import org.koin.core.annotation.Named
 import timber.log.Timber
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
+@KoinViewModel
 class UserLoginViewModel(
 	jellyfin: Jellyfin,
 	private val serverRepository: ServerRepository,
 	private val authenticationRepository: AuthenticationRepository,
-	private val defaultDeviceInfo: DeviceInfo,
+	@Named("defaultDeviceInfo") private val defaultDeviceInfo: DeviceInfo,
 ) : ViewModel() {
 	private val _loginState = MutableStateFlow<LoginState?>(null)
 	val loginState = _loginState.asStateFlow()

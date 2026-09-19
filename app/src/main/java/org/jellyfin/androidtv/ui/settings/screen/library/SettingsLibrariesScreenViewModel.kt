@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.sdk.model.api.CollectionType
+import org.koin.core.annotation.KoinViewModel
 
+@KoinViewModel
 class SettingsLibrariesScreenViewModel(
 	private val userViewsRepository: UserViewsRepository,
 ) : ViewModel() {

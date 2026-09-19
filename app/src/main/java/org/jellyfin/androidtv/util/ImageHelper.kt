@@ -14,7 +14,9 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import org.koin.core.annotation.Single
 
+@Single
 class ImageHelper(
 	private val api: ApiClient,
 ) {

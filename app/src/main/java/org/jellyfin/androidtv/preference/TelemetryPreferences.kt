@@ -5,7 +5,9 @@ import org.acra.ACRA
 import org.jellyfin.preference.booleanPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 import org.jellyfin.preference.stringPreference
+import org.koin.core.annotation.Single
 
+@Single
 class TelemetryPreferences(context: Context) : SharedPreferenceStore(
 	sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 ) {

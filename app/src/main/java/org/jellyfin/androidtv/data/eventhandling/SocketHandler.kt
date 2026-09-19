@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.widget.Toast
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
@@ -40,10 +41,12 @@ import org.jellyfin.sdk.model.extensions.get
 import org.jellyfin.sdk.model.extensions.getValue
 import org.jellyfin.sdk.model.extensions.ticks
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.time.Instant
 import java.util.UUID
 
+@Single
 class SocketHandler(
 	private val context: Context,
 	private val api: ApiClient,
@@ -54,7 +57,7 @@ class SocketHandler(
 	private val audioManager: AudioManager,
 	private val itemLauncher: ItemLauncher,
 	private val playbackHelper: PlaybackHelper,
-	private val lifecycle: Lifecycle,
+	private val lifecycle: Lifecycle = ProcessLifecycleOwner.get().lifecycle,
 ) {
 	init {
 		lifecycle.coroutineScope.launch(Dispatchers.IO) {

@@ -26,8 +26,10 @@ import org.jellyfin.playback.jellyfin.queue.createBaseItemQueueEntry
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.MediaType
+import org.koin.core.annotation.Single
 
 @Suppress("TooManyFunctions")
+@Single(binds = [MediaManager::class])
 class RewriteMediaManager(
 	private val api: ApiClient,
 	private val playbackManager: PlaybackManager,

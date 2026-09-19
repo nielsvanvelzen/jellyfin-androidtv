@@ -19,8 +19,10 @@ import org.jellyfin.androidtv.auth.repository.AuthenticationRepository
 import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.auth.repository.ServerUserRepository
 import org.jellyfin.androidtv.auth.store.AuthenticationPreferences
+import org.koin.core.annotation.KoinViewModel
 import java.util.UUID
 
+@KoinViewModel
 class StartupViewModel(
 	private val serverRepository: ServerRepository,
 	private val serverUserRepository: ServerUserRepository,
@@ -92,4 +94,3 @@ class StartupViewModel(
 
 	suspend fun updateServer(server: Server): Boolean = serverRepository.updateServer(server)
 }
-

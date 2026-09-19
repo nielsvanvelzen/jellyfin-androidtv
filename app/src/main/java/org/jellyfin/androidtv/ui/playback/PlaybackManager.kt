@@ -16,6 +16,7 @@ import org.jellyfin.sdk.api.client.extensions.videosApi
 import org.jellyfin.sdk.model.api.PlayMethod
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackInfoResponse
+import org.koin.core.annotation.Single
 
 private fun createStreamInfo(
 	api: ApiClient,
@@ -58,6 +59,7 @@ private fun createStreamInfo(
 	}
 }
 
+@Single
 class PlaybackManager(
 	private val api: ApiClient
 ) {

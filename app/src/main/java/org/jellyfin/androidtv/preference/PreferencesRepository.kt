@@ -2,11 +2,12 @@ package org.jellyfin.androidtv.preference
 
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.api.client.ApiClient
-import kotlin.collections.set
+import org.koin.core.annotation.Single
 
 /**
  * Repository to access special preference stores.
  */
+@Single
 class PreferencesRepository(
 	private val api: ApiClient,
 	private val liveTvPreferences: LiveTvPreferences,

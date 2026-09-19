@@ -5,7 +5,9 @@ import org.jellyfin.androidtv.preference.store.DisplayPreferencesStore
 import org.jellyfin.preference.enumPreference
 import org.jellyfin.preference.intPreference
 import org.jellyfin.sdk.api.client.ApiClient
+import org.koin.core.annotation.Single
 
+@Single
 class UserSettingPreferences(
 	api: ApiClient,
 ) : DisplayPreferencesStore(

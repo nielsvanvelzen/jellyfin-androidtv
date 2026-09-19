@@ -8,6 +8,7 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.CollectionType
+import org.koin.core.annotation.Single
 
 interface UserViewsRepository {
 	val views: Flow<Collection<BaseItemDto>>
@@ -17,6 +18,7 @@ interface UserViewsRepository {
 	fun allowGridView(collectionType: CollectionType?): Boolean
 }
 
+@Single(binds = [UserViewsRepository::class])
 class UserViewsRepositoryImpl(
 	private val api: ApiClient,
 ) : UserViewsRepository {

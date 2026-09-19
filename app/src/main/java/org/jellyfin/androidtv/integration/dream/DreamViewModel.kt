@@ -36,12 +36,14 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemSortBy
+import org.koin.core.annotation.KoinViewModel
 import timber.log.Timber
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @SuppressLint("StaticFieldLeak")
+@KoinViewModel
 class DreamViewModel(
 	private val api: ApiClient,
 	private val imageLoader: ImageLoader,

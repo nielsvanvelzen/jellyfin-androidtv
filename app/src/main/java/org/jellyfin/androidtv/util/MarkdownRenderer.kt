@@ -4,7 +4,9 @@ import android.content.Context
 import android.text.Spanned
 import io.noties.markwon.Markwon
 import io.noties.markwon.html.HtmlPlugin
+import org.koin.core.annotation.Single
 
+@Single
 class MarkdownRenderer(context: Context) {
 	private val markwon = Markwon.builder(context)
 		.usePlugin(HtmlPlugin.create())

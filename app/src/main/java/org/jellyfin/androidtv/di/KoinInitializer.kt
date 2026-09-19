@@ -6,21 +6,13 @@ import org.jellyfin.androidtv.LogInitializer
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.plugin.module.dsl.module
 
 class KoinInitializer : Initializer<KoinApplication> {
 	override fun create(context: Context): KoinApplication = startKoin {
 		androidContext(context)
-
-		modules(
-			androidModule,
-			appModule,
-			authModule,
-			playbackModule,
-			preferenceModule,
-			utilsModule,
-		)
+		module<AppModule>()
 	}
 
 	override fun dependencies() = listOf(LogInitializer::class.java)
 }
-

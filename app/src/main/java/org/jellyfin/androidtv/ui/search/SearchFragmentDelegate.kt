@@ -14,9 +14,12 @@ import org.jellyfin.androidtv.ui.itemhandling.ItemRowAdapter
 import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.CustomListRowPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
+import org.koin.core.annotation.Factory
+import org.koin.core.annotation.InjectedParam
 
+@Factory
 class SearchFragmentDelegate(
-	private val context: Context,
+	@InjectedParam private val context: Context,
 	private val backgroundService: BackgroundService,
 	private val itemLauncher: ItemLauncher,
 ) {

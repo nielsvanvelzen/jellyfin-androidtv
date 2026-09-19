@@ -39,6 +39,8 @@ import org.jellyfin.sdk.model.DeviceInfo
 import org.jellyfin.sdk.model.api.AuthenticationResult
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.UserDto
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.time.Instant
 
@@ -51,13 +53,14 @@ interface AuthenticationRepository {
 	fun getUserImageUrl(server: Server, user: User): String?
 }
 
+@Single(binds = [AuthenticationRepository::class])
 class AuthenticationRepositoryImpl(
 	private val jellyfin: Jellyfin,
 	private val sessionRepository: SessionRepository,
 	private val authenticationStore: AuthenticationStore,
 	private val userApiClient: ApiClient,
 	private val authenticationPreferences: AuthenticationPreferences,
-	private val defaultDeviceInfo: DeviceInfo,
+	@Named("defaultDeviceInfo") private val defaultDeviceInfo: DeviceInfo,
 ) : AuthenticationRepository {
 	override fun authenticate(server: Server, method: AuthenticateMethod): Flow<LoginState> {
 		return when (method) {

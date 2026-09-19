@@ -4,6 +4,7 @@ import android.content.Context
 import org.jellyfin.preference.booleanPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 import org.jellyfin.preference.stringPreference
+import org.koin.core.annotation.Single
 
 /**
  * System preferences are not possible to modify by the user.
@@ -11,6 +12,7 @@ import org.jellyfin.preference.stringPreference
  *
  * @param context Context to get the SharedPreferences from
  */
+@Single
 class SystemPreferences(context: Context) : SharedPreferenceStore(
 	sharedPreferences = context.getSharedPreferences("systemprefs", Context.MODE_PRIVATE)
 ) {

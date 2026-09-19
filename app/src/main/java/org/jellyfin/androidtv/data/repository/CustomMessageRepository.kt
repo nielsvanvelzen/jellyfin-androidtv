@@ -4,12 +4,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jellyfin.androidtv.constant.CustomMessage
+import org.koin.core.annotation.Single
 
 interface CustomMessageRepository {
 	val message: StateFlow<CustomMessage?>
 	fun pushMessage(message: CustomMessage)
 }
 
+@Single(binds = [CustomMessageRepository::class])
 class CustomMessageRepositoryImpl : CustomMessageRepository {
 	private val _message = MutableStateFlow<CustomMessage?>(null)
 	override val message get() = _message.asStateFlow()

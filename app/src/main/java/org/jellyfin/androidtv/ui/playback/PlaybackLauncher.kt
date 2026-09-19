@@ -8,12 +8,14 @@ import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaType
+import org.koin.core.annotation.Single
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Utility class to launch the playback UI for an item.
  */
+@Single
 class PlaybackLauncher(
 	private val mediaManager: MediaManager,
 	private val videoQueueManager: VideoQueueManager,

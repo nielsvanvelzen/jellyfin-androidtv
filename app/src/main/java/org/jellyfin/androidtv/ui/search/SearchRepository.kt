@@ -10,6 +10,7 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
+import org.koin.core.annotation.Single
 import timber.log.Timber
 
 interface SearchRepository {
@@ -19,6 +20,7 @@ interface SearchRepository {
 	): Result<List<BaseItemDto>>
 }
 
+@Single(binds = [SearchRepository::class])
 class SearchRepositoryImpl(
 	private val apiClient: ApiClient
 ) : SearchRepository {

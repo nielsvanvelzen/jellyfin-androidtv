@@ -29,6 +29,7 @@ import org.jellyfin.sdk.model.ServerVersion
 import org.jellyfin.sdk.model.api.BrandingOptionsDto
 import org.jellyfin.sdk.model.api.ServerDiscoveryInfo
 import org.jellyfin.sdk.model.serializer.toUUID
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.time.Instant
 import java.util.UUID
@@ -59,6 +60,7 @@ interface ServerRepository {
 	}
 }
 
+@Single(binds = [ServerRepository::class])
 class ServerRepositoryImpl(
 	private val jellyfin: Jellyfin,
 	private val authenticationStore: AuthenticationStore,

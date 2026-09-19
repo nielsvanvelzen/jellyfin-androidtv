@@ -8,6 +8,7 @@ import org.jellyfin.sdk.api.client.extensions.playStateApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.UUID
 import org.jellyfin.sdk.model.api.UserItemDataDto
+import org.koin.core.annotation.Single
 import java.time.Instant
 
 interface ItemMutationRepository {
@@ -15,6 +16,7 @@ interface ItemMutationRepository {
 	suspend fun setPlayed(item: UUID, played: Boolean): UserItemDataDto
 }
 
+@Single(binds = [ItemMutationRepository::class])
 class ItemMutationRepositoryImpl(
 	private val api: ApiClient,
 	private val dataRefreshService: DataRefreshService,

@@ -17,7 +17,9 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.UUID
 import org.jellyfin.sdk.model.api.ImageType
+import org.koin.core.annotation.KoinViewModel
 
+@KoinViewModel
 class NextUpViewModel(
 	private val context: Context,
 	private val api: ApiClient,

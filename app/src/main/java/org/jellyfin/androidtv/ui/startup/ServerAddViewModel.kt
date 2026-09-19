@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jellyfin.androidtv.auth.model.ServerAdditionState
 import org.jellyfin.androidtv.auth.repository.ServerRepository
+import org.koin.core.annotation.KoinViewModel
 
+@KoinViewModel
 class ServerAddViewModel(
 	private val serverRepository: ServerRepository,
 ) : ViewModel() {

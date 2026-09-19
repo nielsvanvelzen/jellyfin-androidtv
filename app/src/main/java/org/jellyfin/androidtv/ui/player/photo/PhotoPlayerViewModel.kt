@@ -19,9 +19,11 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.SortOrder
+import org.koin.core.annotation.KoinViewModel
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
+@KoinViewModel
 class PhotoPlayerViewModel(
 	private val api: ApiClient,
 	private val userPreferences: UserPreferences,

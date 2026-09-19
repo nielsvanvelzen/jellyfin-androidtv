@@ -23,6 +23,8 @@ import org.jellyfin.sdk.api.client.extensions.clientLogApi
 import org.jellyfin.sdk.api.client.extensions.userApi
 import org.jellyfin.sdk.model.DeviceInfo
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.util.UUID
 
@@ -47,12 +49,13 @@ interface SessionRepository {
 	fun destroyCurrentSession()
 }
 
+@Single(binds = [SessionRepository::class])
 class SessionRepositoryImpl(
 	private val authenticationPreferences: AuthenticationPreferences,
 	private val authenticationStore: AuthenticationStore,
 	private val userApiClient: ApiClient,
 	private val preferencesRepository: PreferencesRepository,
-	private val defaultDeviceInfo: DeviceInfo,
+	@Named("defaultDeviceInfo") private val defaultDeviceInfo: DeviceInfo,
 	private val userRepository: UserRepository,
 	private val serverRepository: ServerRepository,
 	private val telemetryPreferences: TelemetryPreferences,

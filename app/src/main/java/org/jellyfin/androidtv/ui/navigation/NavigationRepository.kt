@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import org.koin.core.annotation.Single
 import timber.log.Timber
 import java.util.Stack
 
@@ -59,8 +60,9 @@ interface NavigationRepository {
 	fun reset(destination: Destination.Fragment? = null) = reset(destination, false)
 }
 
+@Single(binds = [NavigationRepository::class])
 class NavigationRepositoryImpl(
-	private val defaultDestination: Destination.Fragment,
+	private val defaultDestination: Destination.Fragment = Destinations.home,
 ) : NavigationRepository {
 	private val fragmentHistory = Stack<Destination.Fragment>()
 
@@ -97,4 +99,3 @@ class NavigationRepositoryImpl(
 		Timber.i("Navigating to $actualDestination (via reset, clearHistory=$clearHistory)")
 	}
 }
-

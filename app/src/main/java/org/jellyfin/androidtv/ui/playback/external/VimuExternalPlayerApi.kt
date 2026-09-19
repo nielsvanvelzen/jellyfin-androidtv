@@ -3,12 +3,14 @@ package org.jellyfin.androidtv.ui.playback.external
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import androidx.activity.result.ActivityResult
+import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Implementation of the VIMU Media Player API.
  * Documentation: https://www.vimu.tv/player-api
  */
+@Single(binds = [ExternalPlayerApi::class])
 class VimuExternalPlayerApi : ExternalPlayerApi {
 	companion object {
 		val PACKAGE_NAMES = arrayOf(

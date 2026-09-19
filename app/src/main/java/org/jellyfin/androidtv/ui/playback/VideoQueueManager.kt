@@ -1,7 +1,9 @@
 package org.jellyfin.androidtv.ui.playback
 
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.koin.core.annotation.Single
 
+@Single
 class VideoQueueManager {
 	private var _currentVideoQueue: List<BaseItemDto> = emptyList()
 	private var _currentMediaPosition = -1

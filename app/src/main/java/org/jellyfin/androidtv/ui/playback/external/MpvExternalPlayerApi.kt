@@ -4,12 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import androidx.activity.result.ActivityResult
+import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Implementation of the MPV player API.
  * Documentation: https://mpv-android.github.io/mpv-android/intent.html
  */
+@Single(binds = [ExternalPlayerApi::class])
 class MpvExternalPlayerApi : ExternalPlayerApi {
 	companion object {
 		val PACKAGE_NAMES = arrayOf(

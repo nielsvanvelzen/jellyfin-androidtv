@@ -14,9 +14,11 @@ import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.playback.PlaybackControllerContainer
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.koin.core.annotation.Single
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+@Single
 class InteractionTrackerViewModel(
 	private val userPreferences: UserPreferences,
 	private val playbackControllerContainer: PlaybackControllerContainer

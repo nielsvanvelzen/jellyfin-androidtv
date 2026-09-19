@@ -9,6 +9,7 @@ import org.jellyfin.sdk.api.client.extensions.mediaSegmentsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.MediaSegmentDto
 import org.jellyfin.sdk.model.api.MediaSegmentType
+import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 
 interface MediaSegmentRepository {
@@ -51,6 +52,7 @@ fun Map<MediaSegmentType, MediaSegmentAction>.toMediaSegmentActionsString() =
 	map { "${it.key.serialName}=${it.value.name}" }
 		.joinToString(",")
 
+@Single(binds = [MediaSegmentRepository::class])
 class MediaSegmentRepositoryImpl(
 	private val userPreferences: UserPreferences,
 	private val api: ApiClient,

@@ -11,6 +11,7 @@ import org.jellyfin.sdk.Jellyfin
 import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.extensions.userApi
 import org.jellyfin.sdk.model.api.UserDto
+import org.koin.core.annotation.Single
 import timber.log.Timber
 
 /**
@@ -25,6 +26,7 @@ interface ServerUserRepository {
 	fun deleteStoredUser(user: PrivateUser)
 }
 
+@Single(binds = [ServerUserRepository::class])
 class ServerUserRepositoryImpl(
 	private val jellyfin: Jellyfin,
 	private val authenticationStore: AuthenticationStore,

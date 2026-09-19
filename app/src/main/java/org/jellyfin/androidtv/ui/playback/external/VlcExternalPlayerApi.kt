@@ -3,12 +3,14 @@ package org.jellyfin.androidtv.ui.playback.external
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import androidx.activity.result.ActivityResult
+import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Implementation of the VLC video player API.
  * Documentation: https://wiki.videolan.org/Android_Player_Intents/
  */
+@Single(binds = [ExternalPlayerApi::class])
 class VlcExternalPlayerApi : ExternalPlayerApi {
 	companion object {
 		val PACKAGE_NAMES = arrayOf(

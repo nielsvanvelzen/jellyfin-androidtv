@@ -4,12 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import androidx.activity.result.ActivityResult
+import org.koin.core.annotation.Single
 
 /**
  * Default external video player used as fallback when no known API is available.
  * This implementation only supports basic extras that are broadly available in external players has a simple parser for
  * activity results. Handling for specific players should be done in dedicated implementations.
  */
+@Single(binds = [])
 class DefaultExternalPlayerApi : ExternalPlayerApi {
 	companion object {
 		private const val EXTRA_TITLE = "title"

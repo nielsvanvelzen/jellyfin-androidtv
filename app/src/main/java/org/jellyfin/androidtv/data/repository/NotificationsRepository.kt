@@ -11,6 +11,7 @@ import org.jellyfin.androidtv.data.model.AppNotification
 import org.jellyfin.androidtv.preference.SystemPreferences
 import org.jellyfin.androidtv.util.isTvDevice
 import org.jellyfin.sdk.model.ServerVersion
+import org.koin.core.annotation.Single
 
 interface NotificationsRepository {
 	val notifications: StateFlow<List<AppNotification>>
@@ -20,6 +21,7 @@ interface NotificationsRepository {
 	fun updateServerNotifications(server: Server?)
 }
 
+@Single(binds = [NotificationsRepository::class])
 class NotificationsRepositoryImpl(
 	private val context: Context,
 	private val systemPreferences: SystemPreferences,

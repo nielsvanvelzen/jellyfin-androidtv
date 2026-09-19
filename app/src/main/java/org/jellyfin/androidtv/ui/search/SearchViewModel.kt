@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.R
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.koin.core.annotation.KoinViewModel
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+@KoinViewModel
 class SearchViewModel(
 	private val searchRepository: SearchRepository
 ) : ViewModel() {

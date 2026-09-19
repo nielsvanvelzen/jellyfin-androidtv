@@ -5,7 +5,9 @@ import org.jellyfin.preference.booleanPreference
 import org.jellyfin.preference.stringPreference
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.ItemSortBy
+import org.koin.core.annotation.Single
 
+@Single
 class LiveTvPreferences(
 	api: ApiClient,
 ) : DisplayPreferencesStore(
