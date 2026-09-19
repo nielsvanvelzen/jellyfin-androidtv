@@ -1,5 +1,6 @@
 package org.jellyfin.androidtv.ui.main.screen
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -55,11 +56,14 @@ import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.Button
 import org.jellyfin.androidtv.ui.base.button.ButtonDefaults
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
+import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.main.Routes
 import org.jellyfin.androidtv.ui.navigation.LocalRouter
 import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
 import org.jellyfin.androidtv.ui.shared.toolbar.ToolbarClock
 import org.jellyfin.design.token.ColorTokens
+import org.jellyfin.sdk.model.api.CollectionType
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
@@ -137,6 +141,9 @@ fun NavigationLayout(
 fun Navigation() {
 	val router = LocalRouter.current
 	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
+	val homeScreenViewModel = koinViewModel<HomeScreenViewModel>()
+	val itemLauncher = koinInject<ItemLauncher>()
+	val userViews by homeScreenViewModel.userViews.collectAsState()
 
 	Image(
 		painter = painterResource(R.drawable.ic_jellyfin),
@@ -150,6 +157,7 @@ fun Navigation() {
 		verticalArrangement = Arrangement.spacedBy(4.dp),
 		modifier = Modifier
 			.padding(4.dp)
+			.verticalScroll(rememberScrollState())
 	) {
 		Button(
 			onClick = { router.push(Routes.SEARCH) },
@@ -175,6 +183,25 @@ fun Navigation() {
 			)
 			Spacer(modifier = Modifier.width(8.dp))
 			Text(text = stringResource(R.string.lbl_home), softWrap = false, overflow = TextOverflow.Ellipsis)
+		}
+
+		userViews.forEach { userView ->
+			Button(
+				onClick = { itemLauncher.launchUserView(userView) },
+				colors = ButtonDefaults.colors(containerColor = Color.Transparent),
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Icon(
+					painter = painterResource(userView.collectionType.libraryIcon),
+					contentDescription = userView.name,
+				)
+				Spacer(modifier = Modifier.width(8.dp))
+				Text(
+					text = userView.name.orEmpty(),
+					softWrap = false,
+					overflow = TextOverflow.Ellipsis,
+				)
+			}
 		}
 
 		Spacer(Modifier.weight(1f))
@@ -265,3 +292,23 @@ fun ItemCards() {
 		}
 	}
 }
+
+private val CollectionType?.libraryIcon: Int
+	@DrawableRes get() = when (this) {
+		CollectionType.MOVIES -> R.drawable.ic_movie
+		CollectionType.MUSIC -> R.drawable.ic_music_note
+		CollectionType.HOMEVIDEOS,
+		CollectionType.PHOTOS -> R.drawable.ic_photo
+
+		CollectionType.LIVETV -> R.drawable.ic_tv_play
+		CollectionType.TVSHOWS -> R.drawable.ic_tv
+		CollectionType.TRAILERS -> R.drawable.ic_trailer
+		CollectionType.MUSICVIDEOS -> R.drawable.ic_music_video
+		CollectionType.BOXSETS -> R.drawable.ic_video_library
+		CollectionType.PLAYLISTS -> R.drawable.ic_queue
+
+		null,
+		CollectionType.UNKNOWN -> R.drawable.ic_help
+
+		else -> R.drawable.ic_folder
+	}
