@@ -33,8 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -85,8 +83,8 @@ fun NavigationLayout(
 	Layout(
 		modifier = Modifier
 			.fillMaxSize()
-			.focusGroup()
-			.focusRestorer(contentRequester),
+			.focusRestorer(contentRequester)
+			.focusGroup(),
 		content = {
 			// Navigation
 			Column(
@@ -97,21 +95,24 @@ fun NavigationLayout(
 					.onFocusChanged {
 						navigationFocused = it.hasFocus
 					}
+					.focusRequester(navigationRequester)
+					.focusRestorer()
+					.focusGroup()
 					.focusProperties {
 						end = contentRequester
-					}
-					.focusRequester(navigationRequester),
+					},
 				content = navigation,
 			)
 
 			// Content
 			Box(
 				modifier = Modifier
+					.focusRequester(contentRequester)
 					.focusRestorer()
+					.focusGroup()
 					.focusProperties {
 						start = navigationRequester
-					}
-					.focusRequester(contentRequester),
+					},
 				content = content,
 			)
 		},
@@ -157,6 +158,7 @@ fun Navigation() {
 		verticalArrangement = Arrangement.spacedBy(4.dp),
 		modifier = Modifier
 			.padding(4.dp)
+			.focusRestorer()
 			.verticalScroll(rememberScrollState())
 	) {
 		Button(
@@ -239,6 +241,7 @@ fun HomeScreen() {
 	) {
 		Column(
 			modifier = Modifier
+				.focusRestorer()
 				.verticalScroll(rememberScrollState())
 				.padding(0.dp, 16.dp),
 			verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -270,10 +273,9 @@ fun HomeScreen() {
 fun ItemCards() {
 	Row(
 		modifier = Modifier
+			.focusRestorer()
 			.horizontalScroll(rememberScrollState())
-			.padding(16.dp, 0.dp)
-			.focusGroup()
-			.focusRestorer(),
+			.padding(16.dp, 0.dp),
 		horizontalArrangement = Arrangement.spacedBy(16.dp)
 	) {
 		repeat(50) {
