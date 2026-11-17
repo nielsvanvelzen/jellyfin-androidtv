@@ -30,7 +30,7 @@ import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.integration.dream.DreamViewModel
 import org.jellyfin.androidtv.ui.InteractionTrackerViewModel
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
-import org.jellyfin.androidtv.ui.main.screen.HomeScreenViewModel
+import org.jellyfin.androidtv.ui.main.NavigationViewModel
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.navigation.NavigationRepositoryImpl
@@ -169,7 +169,7 @@ val appModule = module {
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
 	viewModel { SettingsViewModel() }
 	viewModel { SettingsLibrariesScreenViewModel(get()) }
-	viewModel { HomeScreenViewModel(get()) }
+	viewModel { NavigationViewModel(get(), get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
 
