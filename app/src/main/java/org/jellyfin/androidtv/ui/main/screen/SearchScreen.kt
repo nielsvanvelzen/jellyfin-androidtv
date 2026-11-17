@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.Color
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.Button
 import org.jellyfin.androidtv.ui.main.Routes
+import org.jellyfin.androidtv.ui.main.composable.Navigation
+import org.jellyfin.androidtv.ui.main.composable.NavigationLayout
 import org.jellyfin.androidtv.ui.navigation.LocalRouter
 
 @Composable
