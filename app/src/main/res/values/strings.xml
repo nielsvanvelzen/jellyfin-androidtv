@@ -699,4 +699,7 @@
     <string name="truehd">TrueHD</string>
     <string name="eac3_atmos">DD+ Atmos</string>
     <string name="truehd_atmos">TrueHD Atmos</string>
+    <string name="home_rows_load_error">Unable to load home rows</string>
+    <string name="home_rows_retry">Retry</string>
+    <string name="home_row_items_load_error">Unable to load this row</string>
 </resources>

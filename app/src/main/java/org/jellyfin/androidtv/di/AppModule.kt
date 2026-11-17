@@ -17,20 +17,29 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.auth.repository.UserRepositoryImpl
 import org.jellyfin.androidtv.data.eventhandling.SocketHandler
 import org.jellyfin.androidtv.data.model.DataRefreshService
+import org.jellyfin.androidtv.data.model.home.HomeRowProvider
 import org.jellyfin.androidtv.data.repository.CustomMessageRepository
 import org.jellyfin.androidtv.data.repository.CustomMessageRepositoryImpl
 import org.jellyfin.androidtv.data.repository.ExternalAppRepository
+import org.jellyfin.androidtv.data.repository.HomeRowsRepository
 import org.jellyfin.androidtv.data.repository.ItemMutationRepository
 import org.jellyfin.androidtv.data.repository.ItemMutationRepositoryImpl
 import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.data.repository.NotificationsRepositoryImpl
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepositoryImpl
+import org.jellyfin.androidtv.data.repository.home.LatestMediaHomeRowProvider
+import org.jellyfin.androidtv.data.repository.home.LibraryHomeRowProvider
+import org.jellyfin.androidtv.data.repository.home.LiveTvHomeRowProvider
+import org.jellyfin.androidtv.data.repository.home.NextUpHomeRowProvider
+import org.jellyfin.androidtv.data.repository.home.RecordingsHomeRowProvider
+import org.jellyfin.androidtv.data.repository.home.ResumeHomeRowProvider
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.integration.dream.DreamViewModel
 import org.jellyfin.androidtv.ui.InteractionTrackerViewModel
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.main.NavigationViewModel
+import org.jellyfin.androidtv.ui.main.screen.HomeScreenViewModel
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.navigation.NavigationRepositoryImpl
@@ -144,6 +153,13 @@ val appModule = module {
 
 	single<UserRepository> { UserRepositoryImpl() }
 	single<UserViewsRepository> { UserViewsRepositoryImpl(get()) }
+	single { LibraryHomeRowProvider() } bind HomeRowProvider::class
+	single { ResumeHomeRowProvider(get()) } bind HomeRowProvider::class
+	single { NextUpHomeRowProvider(get(), get()) } bind HomeRowProvider::class
+	single { LatestMediaHomeRowProvider(get()) } bind HomeRowProvider::class
+	single { RecordingsHomeRowProvider(get()) } bind HomeRowProvider::class
+	single { LiveTvHomeRowProvider(get()) } bind HomeRowProvider::class
+	single { HomeRowsRepository(get(), get(), getAll()) }
 	single<NotificationsRepository> { NotificationsRepositoryImpl(get(), get()) }
 	single<ItemMutationRepository> { ItemMutationRepositoryImpl(get(), get()) }
 	single<CustomMessageRepository> { CustomMessageRepositoryImpl() }
@@ -169,6 +185,7 @@ val appModule = module {
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
 	viewModel { SettingsViewModel() }
 	viewModel { SettingsLibrariesScreenViewModel(get()) }
+	viewModel { HomeScreenViewModel(get(), get(), get()) }
 	viewModel { NavigationViewModel(get(), get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
