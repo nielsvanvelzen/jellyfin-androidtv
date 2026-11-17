@@ -2,6 +2,9 @@ package org.jellyfin.androidtv.ui.navigation.focus
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 
 @Stable
@@ -10,7 +13,12 @@ class FocusPersistManager {
 	private var lastFocusedKey: String? = null
 	private var initialFocusRequester: FocusRequester? = null
 	private var initialFocusAllowed = true
-	private var restoredFocusKey: String? = null
+	private var restoredFocusKey by mutableStateOf<String?>(null)
+
+	/**
+	 * A target may not be composed yet when an asynchronous or lazy screen returns.
+	 */
+	val pendingRestorationKey: String? get() = restoredFocusKey
 
 	fun register(key: String, requester: FocusRequester, initialFocus: Boolean) {
 		val previousRequester = requesters.put(key, requester)
@@ -27,6 +35,8 @@ class FocusPersistManager {
 		if (!isFocused) return
 
 		lastFocusedKey = key
+		// Once focus is established, a late-loading target must not steal it.
+		restoredFocusKey = null
 		if (initialFocusRequester == null || requesters[key] === initialFocusRequester) {
 			initialFocusAllowed = false
 		}
@@ -40,12 +50,17 @@ class FocusPersistManager {
 
 	fun save(): String? = lastFocusedKey
 
+	fun requestRestoredFocus(key: String, requester: FocusRequester) {
+		if (restoredFocusKey != key || requesters[key] !== requester) return
+		if (requester.requestFocus() && restoredFocusKey == key) restoredFocusKey = null
+	}
+
 	fun restore(key: String?) {
 		restoredFocusKey = key
 		if (key == null) return
 
 		initialFocusAllowed = false
-		requesters[key]?.requestFocus()
+		requesters[key]?.let { requestRestoredFocus(key, it) }
 	}
 }
 
