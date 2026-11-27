@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +60,6 @@ import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.main.composable.libraryIcon
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.ui.navigation.focus.LocalFocusPersistManager
 import org.jellyfin.androidtv.ui.navigation.focus.focusKey
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.androidtv.util.apiclient.getUrl
@@ -82,16 +80,8 @@ internal fun HomeMediaRow(
 	val backgroundService = koinInject<BackgroundService>()
 	val context = LocalContext.current
 	var selectedItemKey by rememberSaveable(row.key) { mutableStateOf<String?>(null) }
-	val focusManager = LocalFocusPersistManager.current
-	val restoredItemKey = focusManager.pendingRestorationKey
-		?.takeIf { it.startsWith("${row.key}.") }?.removePrefix("${row.key}.")
-	val targetItemKey = restoredItemKey ?: selectedItemKey
-	val selectedIndex = items.indexOfFirst { it.key == targetItemKey }.coerceAtLeast(0)
+	val selectedIndex = items.indexOfFirst { it.key == selectedItemKey }.coerceAtLeast(0)
 	val listState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
-	LaunchedEffect(restoredItemKey, items) {
-		val index = items.indexOfFirst { it.key == restoredItemKey }
-		if (index >= 0) listState.scrollToItem(index)
-	}
 	val requesters = remember { mutableMapOf<String, FocusRequester>() }
 	val placedItems = remember { mutableStateMapOf<String, Boolean>() }
 	val scope = rememberCoroutineScope()
@@ -123,7 +113,7 @@ internal fun HomeMediaRow(
 			.focusProperties {
 				onEnter = {
 					if (!restoringFocus && items.isNotEmpty()) {
-						val index = items.indexOfFirst { it.key == targetItemKey }.coerceAtLeast(0)
+						val index = items.indexOfFirst { it.key == selectedItemKey }.coerceAtLeast(0)
 						val key = items[index].key
 						val requester = requesters.getOrPut(key) { FocusRequester() }
 						focusRestoration.cancelPending()

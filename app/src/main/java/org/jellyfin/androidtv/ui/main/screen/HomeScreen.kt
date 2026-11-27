@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -99,18 +98,16 @@ private fun HomeContent(
 	onRetryRow: (String) -> Unit,
 	focusRestoration: HomeFocusRestoration,
 ) {
-	val listState = rememberLazyListState()
 	val focusManager = LocalFocusPersistManager.current
 	val content = uiState as? HomeScreenUiState.Content
 	val visibleRows = content?.visibleRows.orEmpty()
 	val initialRowKey = visibleRows.firstOrNull()?.key
-	val restoreKey = focusManager.pendingRestorationKey
-	LaunchedEffect(uiState, restoreKey) {
-		val key = restoreKey ?: focusManager.save() ?: return@LaunchedEffect
+	LaunchedEffect(uiState) {
+		val key = focusManager.save() ?: return@LaunchedEffect
 		when (uiState) {
 			HomeScreenUiState.Loading -> Unit
 			HomeScreenUiState.Error -> {
-				if (key == "retry" || (restoreKey != null && !key.startsWith("navigation."))) focusManager.restore("retry")
+				if (key == "retry") focusManager.restore("retry")
 			}
 
 			is HomeScreenUiState.Content -> {
@@ -121,16 +118,7 @@ private fun HomeContent(
 			}
 		}
 	}
-	val restoreRow = visibleRows.find { restoreKey == it.key || restoreKey?.startsWith("${it.key}.") == true }
-	LaunchedEffect(restoreRow) {
-		// The same focus-key manager as settings restores the card when it is placed.
-		// Make its parent lazy row available first if it was recycled or loaded later.
-		if (restoreRow is HomeRowUiState.Content || restoreRow is HomeRowUiState.Error) {
-			listState.scrollToItem(visibleRows.indexOf(restoreRow) + 1)
-		}
-	}
 	LazyColumn(
-		state = listState,
 		modifier = Modifier
 			.fillMaxSize()
 			.focusRestorer(),

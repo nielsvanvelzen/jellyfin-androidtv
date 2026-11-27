@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,7 +27,7 @@ import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.Button
 import org.jellyfin.androidtv.ui.base.button.ButtonDefaults
-import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
+import org.jellyfin.androidtv.ui.itemhandling.ItemLauncherHelper
 import org.jellyfin.androidtv.ui.main.NavigationViewModel
 import org.jellyfin.androidtv.ui.main.Routes
 import org.jellyfin.androidtv.ui.navigation.LocalRouter
@@ -34,7 +35,6 @@ import org.jellyfin.androidtv.ui.navigation.focus.focusKey
 import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
 import org.jellyfin.sdk.model.api.CollectionType
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
 @Composable
@@ -43,7 +43,7 @@ fun Navigation(initialFocus: Boolean = false) {
 	val userViews by viewModel.userViews.collectAsStateWithLifecycle()
 	val router = LocalRouter.current
 	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
-	val itemLauncher = koinInject<ItemLauncher>()
+	val context = LocalContext.current
 
 	Image(
 		painter = painterResource(R.drawable.ic_jellyfin),
@@ -93,7 +93,7 @@ fun Navigation(initialFocus: Boolean = false) {
 
 		userViews.forEach { userView ->
 			Button(
-				onClick = { itemLauncher.launchUserView(userView) },
+				onClick = { ItemLauncherHelper.launchUserView(context, userView) },
 				colors = ButtonDefaults.colors(containerColor = Color.Transparent),
 				modifier = Modifier
 					.fillMaxWidth()
